@@ -1,3 +1,6 @@
-rm -f ./cube
-clang++ -g -std=c++20 -Wall -Wextra -Wno-missing-field-initializers src/log.cpp src/main.cpp -o cube -I./src -I./rlImGui/src -I ./rlImGui/imgui -I ./rlImGui/imgui/backends -I ./raylib/src -L./rlImGui/src -L./raylib/src -lrlImGui -lraylib -framework OpenGL -framework CoreFoundation -framework CoreGraphics -framework IOKit -framework AppKit
-./cube
+rm -f ./ray-cube
+
+RAYLIB_DIR=../rolling-cube/raylib/src
+
+clang++ -g -std=c++20 -Wall -Wextra -Wno-missing-field-initializers ray-cube.cpp -o ray-cube -I$RAYLIB_DIR  -L$RAYLIB_DIR -lraylib -framework OpenGL -framework CoreFoundation -framework CoreGraphics -framework IOKit -framework AppKit
+./ray-cube
