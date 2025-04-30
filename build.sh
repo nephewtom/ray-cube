@@ -1,3 +1,6 @@
-rm -f ./cube
-g++ -g  -std=c++17 -Wall src/main.cpp src/log.cpp -o cube -I./src -I./rlImGui/src -I ./rlImGui/imgui -I ./rlImGui/imgui/backends -I ./raylib/src -L./rlImGui/src -L./raylib/src -lrlImGui -lraylib -Wall -Wextra -Wno-missing-field-initializers
-./cube
+rm -f ./ray-cube
+
+RAYLIB_DIR=../rolling-cube/raylib/src
+
+g++ -g  -std=c++17 -Wall ray-cube.cpp -o ray-cube -I$RAYLIB_DIR  -L$RAYLIB_DIR -lraylib -Wall -Wextra -Wno-missing-field-initializers
+./ray-cube
