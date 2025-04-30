@@ -1,0 +1,60 @@
+INFO: Initializing raylib 5.6-dev
+ray-cube.html:94 INFO: Platform backend: WEB (HTML5)
+ray-cube.html:94 INFO: Supported raylib modules:
+ray-cube.html:94 INFO:     > rcore:..... loaded (mandatory)
+ray-cube.html:94 INFO:     > rlgl:...... loaded (mandatory)
+ray-cube.html:94 INFO:     > rshapes:... loaded (optional)
+ray-cube.html:94 INFO:     > rtextures:. loaded (optional)
+ray-cube.html:94 INFO:     > rtext:..... loaded (optional)
+ray-cube.html:94 INFO:     > rmodels:... loaded (optional)
+ray-cube.html:94 INFO:     > raudio:.... loaded (optional)
+ray-cube.html:94 INFO: DISPLAY: Device initialized successfully
+ray-cube.html:94 INFO:     > Display size: 1280 x 720
+ray-cube.html:94 INFO:     > Screen size:  1280 x 720
+ray-cube.html:94 INFO:     > Render size:  1280 x 720
+ray-cube.html:94 INFO:     > Viewport offsets: 0, 0
+ray-cube.html:94 INFO: GL: Supported extensions count: 47
+ray-cube.html:94 INFO: GL: OpenGL device information:
+ray-cube.html:94 INFO:     > Vendor:   WebKit
+ray-cube.html:94 INFO:     > Renderer: WebKit WebGL
+ray-cube.html:94 INFO:     > Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+ray-cube.html:94 INFO:     > GLSL:     OpenGL ES GLSL ES 3.00 (WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium))
+ray-cube.html:94 WARNING: GL: VAO extension not found, VAO not supported
+ray-cube.html:94 WARNING: GL: NPOT textures extension not found, limited NPOT support (no-mipmaps, no-repeat)
+ray-cube.html:94 INFO: GL: DXT compressed textures supported
+ray-cube.html:94 INFO: PLATFORM: WEB: Initialized successfully
+ray-cube.html:94 INFO: TEXTURE: [ID 2] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+ray-cube.html:94 INFO: TEXTURE: [ID 2] Default texture loaded successfully
+ray-cube.html:94 INFO: SHADER: [ID 3] Vertex shader compiled successfully
+ray-cube.html:94 INFO: SHADER: [ID 4] Fragment shader compiled successfully
+ray-cube.html:94 INFO: SHADER: [ID 5] Program shader loaded successfully
+ray-cube.html:94 INFO: SHADER: [ID 5] Default shader loaded successfully
+ray-cube.html:94 INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+ray-cube.html:94 INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+ray-cube.html:94 INFO: RLGL: Default OpenGL state initialized successfully
+ray-cube.html:94 INFO: TEXTURE: [ID 11] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+ray-cube.html:94 INFO: FONT: Default font loaded successfully (224 glyphs)
+ray-cube.html:94 INFO: SYSTEM: Working Directory: /
+ray-cube.html:94 INFO: TIMER: Target time per frame: 16.667 milliseconds
+ray-cube.html:94 INFO: FILEIO: [assets/ray-cube.gltf] File loaded successfully
+ray-cube.html:94 INFO: MODEL: [assets/ray-cube.gltf] Model basic data (glTF) loaded successfully
+ray-cube.html:94 INFO:     > Meshes count: 1
+ray-cube.html:94 INFO:     > Materials count: 1 (+1 default)
+ray-cube.html:94 DEBUG:     > Buffers count: 1
+ray-cube.html:94 DEBUG:     > Images count: 1
+ray-cube.html:94 DEBUG:     > Textures count: 1
+ray-cube.html:94 DEBUG:     > Primitives (triangles only) count based on hierarchy : 1
+ray-cube.html:94 INFO: IMAGE: Data loaded successfully (500x500 | R8G8B8 | 1 mipmaps)
+ray-cube.html:94 INFO: TEXTURE: [ID 12] Texture loaded successfully (500x500 | R8G8B8 | 1 mipmaps)
+ray-cube.html:94 INFO: VBO: Mesh uploaded successfully to VRAM (GPU)
+ray-cube.js:242 Uncaught TypeError: Cannot set properties of undefined (setting 'clientside')
+    at _glVertexAttribPointer (ray-cube.js:8082:21)
+    at imports.<computed> (ray-cube.js:10877:24)
+    at ray-cube.wasm.rlDrawRenderBatch (ray-cube.wasm:0x8314)
+    at ray-cube.wasm.EndMode3D (ray-cube.wasm:0x13205)
+    at ray-cube.wasm.__original_main (ray-cube.wasm:0x6ae3)
+    at ray-cube.wasm.main (ray-cube.wasm:0x6c1e)
+    at ret.<computed> (ray-cube.js:10909:24)
+    at Object.doRewind (ray-cube.js:11014:16)
+    at ray-cube.js:11048:47
+    at callUserCallback (ray-cube.js:8596:9)Understand this error
