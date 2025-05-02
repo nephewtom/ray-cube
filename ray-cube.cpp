@@ -58,6 +58,9 @@ struct Cube {
 	void updateSliding(float);
 	void updateRolling(float);
 	void draw();
+	
+	Sound rollWav;
+	Sound slideWav;
 };
 Cube cube;
 
@@ -78,6 +81,11 @@ void Cube::init(Vector3 initPos, bool smoothBehaviour) {
 	
 	animationProgress = 0.0f;
 	smooth = smoothBehaviour;
+	
+	TRACELOGD("Loading Sound...");
+	rollWav = LoadSound("assets/roll.wav");
+	slideWav = LoadSound("assets/slide.wav");
+	TRACELOGD("Finished loading Sound");
 }
 
 void Cube::updateSliding(float delta) {
@@ -109,6 +117,7 @@ void Cube::updateSliding(float delta) {
 		endPosition = Vector3Add(position, slideStep);
 		
 		isSliding = true;
+		PlaySound(slideWav);
 	}
 
 	if (isSliding) {
@@ -133,7 +142,7 @@ void Cube::updateSliding(float delta) {
 		if (animationProgress >= 1.0f) {
 			position = endPosition;
 			isSliding = false;
-			animationProgress = 0.0f;
+			animationProgress = 0.0f;			
 		}
 	}
 }
@@ -234,7 +243,8 @@ void Cube::updateRolling(float delta) {
 			Matrix translationBackFromOrigin = MatrixTranslate(position.x, position.y, position.z);
 			transforms = MatrixMultiply(translationToOrigin, rotations);
 			transforms = MatrixMultiply(transforms, translationBackFromOrigin);
-			// transforms = MatrixMultiply(transforms, scale);
+
+			PlaySound(rollWav);
 		}
 	}
 }
@@ -254,63 +264,121 @@ void Cube::draw() {
 }
 
 bool cameraUpdateEnabled = false;
+Camera3D camera;
+
+
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
+
+void DrawScaledText(const char* text, int x, int y, int fontSize, Color color) {
+    float scaleX = (float)GetScreenWidth() / SCREEN_WIDTH;
+    float scaleY = (float)GetScreenHeight() / SCREEN_HEIGHT;
+    float scale = fminf(scaleX, scaleY); // keep aspect ratio
+
+    DrawText(text, x * scale, y * scale, fontSize * scale, color);
+}
+
 
 void drawText() {
 	DrawFPS(10, 10);
 	
-	DrawText(TextFormat("T - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
+	DrawScaledText(TextFormat("T - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
 			 10, 30, 20, BLUE);
 
-	DrawText(TextFormat("WASD & Arrows - control %s", cameraUpdateEnabled ? "camera" : "cube"),
+	DrawScaledText(TextFormat("WASD & Arrows - control %s", cameraUpdateEnabled ? "camera" : "cube"),
 			 10, 60, 20, BLUE);
 
 	if (!cameraUpdateEnabled) {
 		
-		DrawText("Some data", 10, 150, 20, RED);		
-		DrawText(TextFormat("position: (%.2f, %.2f, %.2f)", cube.position.x, cube.position.y, cube.position.z), 
-				 10, 170, 20, DARKGRAY);
-		DrawText(TextFormat("endPosition: (%.2f, %.2f, %.2f)", 
-							cube.endPosition.x, cube.endPosition.y, cube.endPosition.z), 
+		DrawScaledText("Some data", 10, 150, 20, RED);		
+		DrawScaledText(TextFormat("position: (%.2f, %.2f, %.2f)", cube.position.x, cube.position.y, cube.position.z), 
+					   10, 170, 20, DARKGRAY);
+		DrawScaledText(TextFormat("endPosition: (%.2f, %.2f, %.2f)", 
+								  cube.endPosition.x, cube.endPosition.y, cube.endPosition.z), 
 				 10, 190, 20, DARKGRAY);
-		DrawText(TextFormat("direction: %s", 
-							cube.direction == DIR_FORWARD ? "forward" :
+		DrawScaledText(TextFormat("direction: %s", 
+								  cube.direction == DIR_FORWARD ? "forward" :
 							cube.direction == DIR_BACKWARD ? "backward" :
 							cube.direction == DIR_RIGHT ? "right" :
 							cube.direction == DIR_LEFT ? "left" : "idle"),
 				 10, 210, 20, DARKGRAY);
 
 		
-		DrawText("Arrows slide the cube", 10, 280, 20, RED);
-		DrawText(TextFormat("isSliding: %s", cube.isSliding ? "true" : "false"),
-				 10, 300, 20, DARKGRAY);
-		DrawText(TextFormat("slideStep: (%.1f, %.1f, %.1f)", cube.slideStep.x, cube.slideStep.y, cube.slideStep.z), 
-				 10, 320, 20, DARKGRAY);
+		DrawScaledText("Arrows slide the cube", 10, 280, 20, RED);
+		DrawScaledText(TextFormat("isSliding: %s", cube.isSliding ? "true" : "false"),
+					   10, 300, 20, DARKGRAY);
+		DrawScaledText(TextFormat("slideStep: (%.1f, %.1f, %.1f)", cube.slideStep.x, cube.slideStep.y, cube.slideStep.z), 
+					   10, 320, 20, DARKGRAY);
 
 		
 		
-		DrawText("WASD rolls the cube", 10, 400, 20, RED);
-		DrawText(TextFormat("isRolling: %s", cube.isRolling ? "true" : "false"),
-				 10, 420, 20, DARKGRAY);		
-		DrawText(TextFormat("rotationAngle: %.2f", cube.rotationAngle),
-				 10, 440, 20, DARKGRAY);
+		DrawScaledText("WASD rolls the cube", 10, 400, 20, RED);
+		DrawScaledText(TextFormat("isRolling: %s", cube.isRolling ? "true" : "false"),
+					   10, 420, 20, DARKGRAY);		
+		DrawScaledText(TextFormat("rotationAngle: %.2f", cube.rotationAngle),
+					   10, 440, 20, DARKGRAY);
 
 		
-		DrawText(TextFormat("animationProgress: %.2f", cube.animationProgress),
-				 1000, 30, 20, DARKGRAY);
+		DrawScaledText(TextFormat("animationProgress: %.2f", cube.animationProgress),
+					   1000, 30, 20, DARKGRAY);
 	}
 }
 
+void updateFrameWindow() {
+	
+	float delta = GetFrameTime();
+
+	if (IsKeyPressed(KEY_T)) {
+		cameraUpdateEnabled = !cameraUpdateEnabled;
+		if (cameraUpdateEnabled) {
+			SetMousePosition(GetScreenWidth() /2, GetScreenHeight() /2);
+		}
+	}
+
+	if (cameraUpdateEnabled) {
+		UpdateCamera(&camera, CAMERA_THIRD_PERSON);
+	} else {
+		cube.update(delta);
+	}
+	
+	BeginDrawing();
+	ClearBackground(RAYWHITE);
+
+	BeginMode3D(camera);
+	{
+		cube.draw();
+		DrawGrid(10, 2.0f);
+		drawAxis();
+	}
+	EndMode3D();
+            
+	drawText();
+	EndDrawing();
+}
+
+#ifdef PLATFORM_WEB
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+
+EM_BOOL ResizeCallback(int eventType, const EmscriptenUiEvent *e, void *userData) {
+    double w, h;
+    emscripten_get_element_css_size("#canvas", &w, &h);
+    SetWindowSize((int)w, (int)h);
+    return EM_TRUE;
+}
+#endif
 
 int main(void)
 {
-	const int screenWidth = 1280;
-	const int screenHeight = 720;
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
+	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raylib Rotating Cube");
+	
 
-	InitWindow(screenWidth, screenHeight, "Raylib Rotating Cube");
-    SetTraceLogLevel(LOG_ALL);
+	SetTraceLogLevel(LOG_ALL);
 	SetTargetFPS(60);
 	
-	Camera3D camera;
+	InitAudioDevice();
+	
 	camera.position = (Vector3){ 3.0f, 10.0f, 12.0f };
 	camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
 	camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
@@ -319,39 +387,18 @@ int main(void)
 
 	cube.init({1, 1, 1}, true);
 	
-	while (!WindowShouldClose())
-	{
-		float delta = GetFrameTime();
-
-		if (IsKeyPressed(KEY_T)) {
-			cameraUpdateEnabled = !cameraUpdateEnabled;
-			if (cameraUpdateEnabled) {
-				SetMousePosition(screenWidth/2, screenHeight/2);
-			}
-		}
-
-		if (cameraUpdateEnabled) {
-			UpdateCamera(&camera, CAMERA_THIRD_PERSON);
-		} else {
-			cube.update(delta);
-		}
-		
-		BeginDrawing();
-		ClearBackground(RAYWHITE);
-
-		BeginMode3D(camera);
-		{
-			cube.draw();
-			DrawGrid(10, 2.0f);
-			drawAxis();
-		}
-		EndMode3D();
-            
-		drawText();
-		EndDrawing();
+#ifdef PLATFORM_WEB
+#ifdef RESIZE_CALLBACK
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_TRUE, ResizeCallback);
+	ResizeCallback(0, NULL, NULL);
+#endif
+	emscripten_set_main_loop(updateFrameWindow, 0, 1);	
+#else
+	while (!WindowShouldClose()) {
+		updateFrameWindow();
 	}
-
 	CloseWindow();
+#endif		
     
 	return 0;
 }

@@ -11,12 +11,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
+        height: 100vh;
     }
     canvas {
       display: block;
       background-color: black;
+      width: 1280px;
+      height: 720px;
     }
   </style>
 </head>
@@ -25,15 +26,13 @@
 
   <script>
     const canvas = document.getElementById('canvas');
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'f') {
+            Module.requestFullscreen(true, false);
+        }
+    });
     
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
     var Module = {
       canvas: canvas,
       setStatus: function() {},
@@ -41,6 +40,6 @@
     };
   </script>
 
-  <script async type="text/javascript" src="ray-cube.js"></script>
+  {{{ SCRIPT }}}
 </body>
 </html>

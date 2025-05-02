@@ -31,7 +31,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: C:\Users\tomas\AppData\Local\Temp\tmpo0hzpjhc.js
+// include: C:\Users\tomas\AppData\Local\Temp\tmp1emtuexh.js
 
   Module['expectedDataFileDownloads'] ??= 0;
   Module['expectedDataFileDownloads']++;
@@ -208,25 +208,25 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/cube-numbers-letters.jpg", "start": 0, "end": 48427}, {"filename": "/assets/ray-cube.blend", "start": 48427, "end": 968963}, {"filename": "/assets/ray-cube.gltf", "start": 968963, "end": 1036456}], "remote_package_size": 1036456});
+    loadPackage({"files": [{"filename": "/assets/cube-numbers-letters.jpg", "start": 0, "end": 48427}, {"filename": "/assets/ray-cube.blend", "start": 48427, "end": 968963}, {"filename": "/assets/ray-cube.gltf", "start": 968963, "end": 1036456}, {"filename": "/assets/roll.wav", "start": 1036456, "end": 1125268, "audio": 1}, {"filename": "/assets/slide.wav", "start": 1125268, "end": 1183648, "audio": 1}], "remote_package_size": 1183648});
 
   })();
 
-// end include: C:\Users\tomas\AppData\Local\Temp\tmpo0hzpjhc.js
-// include: C:\Users\tomas\AppData\Local\Temp\tmpl25twsyy.js
+// end include: C:\Users\tomas\AppData\Local\Temp\tmp1emtuexh.js
+// include: C:\Users\tomas\AppData\Local\Temp\tmpe5pccygy.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if (Module['$ww'] || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: C:\Users\tomas\AppData\Local\Temp\tmpl25twsyy.js
-// include: C:\Users\tomas\AppData\Local\Temp\tmp4hzu5jgh.js
+  // end include: C:\Users\tomas\AppData\Local\Temp\tmpe5pccygy.js
+// include: C:\Users\tomas\AppData\Local\Temp\tmpfzx_jk4y.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: C:\Users\tomas\AppData\Local\Temp\tmp4hzu5jgh.js
+  // end include: C:\Users\tomas\AppData\Local\Temp\tmpfzx_jk4y.js
 
 
 // Sometimes an existing Module object exists with properties
@@ -525,10 +525,10 @@ function writeStackCookie() {
   // The stack grow downwards towards _emscripten_stack_get_end.
   // We write cookies to the final two words in the stack and detect if they are
   // ever overwritten.
-  HEAPU32[((max)>>2)] = 0x02135467;
-  HEAPU32[(((max)+(4))>>2)] = 0x89BACDFE;
+  HEAPU32[((max)>>2)] = 0x02135467;checkInt32(0x02135467);
+  HEAPU32[(((max)+(4))>>2)] = 0x89BACDFE;checkInt32(0x89BACDFE);
   // Also test the global address 0 for integrity.
-  HEAPU32[((0)>>2)] = 1668509029;
+  HEAPU32[((0)>>2)] = 1668509029;checkInt32(1668509029);
 }
 
 function checkStackCookie() {
@@ -673,6 +673,31 @@ function unexportedRuntimeSymbol(sym) {
   }
 }
 
+var MAX_UINT8  = (2 **  8) - 1;
+var MAX_UINT16 = (2 ** 16) - 1;
+var MAX_UINT32 = (2 ** 32) - 1;
+var MAX_UINT53 = (2 ** 53) - 1;
+var MAX_UINT64 = (2 ** 64) - 1;
+
+var MIN_INT8  = - (2 ** ( 8 - 1));
+var MIN_INT16 = - (2 ** (16 - 1));
+var MIN_INT32 = - (2 ** (32 - 1));
+var MIN_INT53 = - (2 ** (53 - 1));
+var MIN_INT64 = - (2 ** (64 - 1));
+
+function checkInt(value, bits, min, max) {
+  assert(Number.isInteger(Number(value)), `attempt to write non-integer (${value}) into integer heap`);
+  assert(value <= max, `value (${value}) too large to write as ${bits}-bit value`);
+  assert(value >= min, `value (${value}) too small to write as ${bits}-bit value`);
+}
+
+var checkInt1 = (value) => checkInt(value, 1, 1);
+var checkInt8 = (value) => checkInt(value, 8, MIN_INT8, MAX_UINT8);
+var checkInt16 = (value) => checkInt(value, 16, MIN_INT16, MAX_UINT16);
+var checkInt32 = (value) => checkInt(value, 32, MIN_INT32, MAX_UINT32);
+var checkInt53 = (value) => checkInt(value, 53, MIN_INT53, MAX_UINT53);
+var checkInt64 = (value) => checkInt(value, 64, MIN_INT64, MAX_UINT64);
+
 var runtimeDebug = true; // Switch to false at runtime to disable logging at the right times
 
 // Used by XXXXX_DEBUG settings to output debug messages.
@@ -727,6 +752,8 @@ function initRuntime() {
   runtimeInitialized = true;
 
   checkStackCookie();
+
+  setStackLimits();
 
   if (!Module['noFSInit'] && !FS.initialized) FS.init();
 TTY.init();
@@ -1091,6 +1118,12 @@ async function createWasm() {
       return '0x' + ptr.toString(16).padStart(8, '0');
     };
 
+  var setStackLimits = () => {
+      var stackLow = _emscripten_stack_get_base();
+      var stackHigh = _emscripten_stack_get_end();
+      ___set_stack_limits(stackLow, stackHigh);
+    };
+
   
     /**
      * @param {number} ptr
@@ -1100,11 +1133,11 @@ async function createWasm() {
   function setValue(ptr, value, type = 'i8') {
     if (type.endsWith('*')) type = '*';
     switch (type) {
-      case 'i1': HEAP8[ptr] = value; break;
-      case 'i8': HEAP8[ptr] = value; break;
-      case 'i16': HEAP16[((ptr)>>1)] = value; break;
-      case 'i32': HEAP32[((ptr)>>2)] = value; break;
-      case 'i64': HEAP64[((ptr)>>3)] = BigInt(value); break;
+      case 'i1': HEAP8[ptr] = value;checkInt8(value); break;
+      case 'i8': HEAP8[ptr] = value;checkInt8(value); break;
+      case 'i16': HEAP16[((ptr)>>1)] = value;checkInt16(value); break;
+      case 'i32': HEAP32[((ptr)>>2)] = value;checkInt32(value); break;
+      case 'i64': HEAP64[((ptr)>>3)] = BigInt(value);checkInt64(value); break;
       case 'float': HEAPF32[((ptr)>>2)] = value; break;
       case 'double': HEAPF64[((ptr)>>3)] = value; break;
       case '*': HEAPU32[((ptr)>>2)] = value; break;
@@ -1200,6 +1233,16 @@ async function createWasm() {
     };
   var ___assert_fail = (condition, filename, line, func) =>
       abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
+
+  
+  
+  var ___handle_stack_overflow = (requested) => {
+      var base = _emscripten_stack_get_base();
+      var end = _emscripten_stack_get_end();
+      abort(`stack overflow (Attempt to set SP to ${ptrToString(requested)}` +
+            `, with stack limits [${ptrToString(end)} - ${ptrToString(base)}` +
+            ']). If you require more stack space build with -sSTACK_SIZE=<bytes>');
+    };
 
   var PATH = {
   isAbs:(path) => path.charAt(0) === '/',
@@ -3810,38 +3853,38 @@ async function createWasm() {
         return dir + '/' + path;
       },
   writeStat(buf, stat) {
-        HEAP32[((buf)>>2)] = stat.dev;
-        HEAP32[(((buf)+(4))>>2)] = stat.mode;
-        HEAPU32[(((buf)+(8))>>2)] = stat.nlink;
-        HEAP32[(((buf)+(12))>>2)] = stat.uid;
-        HEAP32[(((buf)+(16))>>2)] = stat.gid;
-        HEAP32[(((buf)+(20))>>2)] = stat.rdev;
-        HEAP64[(((buf)+(24))>>3)] = BigInt(stat.size);
-        HEAP32[(((buf)+(32))>>2)] = 4096;
-        HEAP32[(((buf)+(36))>>2)] = stat.blocks;
+        HEAP32[((buf)>>2)] = stat.dev;checkInt32(stat.dev);
+        HEAP32[(((buf)+(4))>>2)] = stat.mode;checkInt32(stat.mode);
+        HEAPU32[(((buf)+(8))>>2)] = stat.nlink;checkInt32(stat.nlink);
+        HEAP32[(((buf)+(12))>>2)] = stat.uid;checkInt32(stat.uid);
+        HEAP32[(((buf)+(16))>>2)] = stat.gid;checkInt32(stat.gid);
+        HEAP32[(((buf)+(20))>>2)] = stat.rdev;checkInt32(stat.rdev);
+        HEAP64[(((buf)+(24))>>3)] = BigInt(stat.size);checkInt64(stat.size);
+        HEAP32[(((buf)+(32))>>2)] = 4096;checkInt32(4096);
+        HEAP32[(((buf)+(36))>>2)] = stat.blocks;checkInt32(stat.blocks);
         var atime = stat.atime.getTime();
         var mtime = stat.mtime.getTime();
         var ctime = stat.ctime.getTime();
-        HEAP64[(((buf)+(40))>>3)] = BigInt(Math.floor(atime / 1000));
-        HEAPU32[(((buf)+(48))>>2)] = (atime % 1000) * 1000 * 1000;
-        HEAP64[(((buf)+(56))>>3)] = BigInt(Math.floor(mtime / 1000));
-        HEAPU32[(((buf)+(64))>>2)] = (mtime % 1000) * 1000 * 1000;
-        HEAP64[(((buf)+(72))>>3)] = BigInt(Math.floor(ctime / 1000));
-        HEAPU32[(((buf)+(80))>>2)] = (ctime % 1000) * 1000 * 1000;
-        HEAP64[(((buf)+(88))>>3)] = BigInt(stat.ino);
+        HEAP64[(((buf)+(40))>>3)] = BigInt(Math.floor(atime / 1000));checkInt64(Math.floor(atime / 1000));
+        HEAPU32[(((buf)+(48))>>2)] = (atime % 1000) * 1000 * 1000;checkInt32((atime % 1000) * 1000 * 1000);
+        HEAP64[(((buf)+(56))>>3)] = BigInt(Math.floor(mtime / 1000));checkInt64(Math.floor(mtime / 1000));
+        HEAPU32[(((buf)+(64))>>2)] = (mtime % 1000) * 1000 * 1000;checkInt32((mtime % 1000) * 1000 * 1000);
+        HEAP64[(((buf)+(72))>>3)] = BigInt(Math.floor(ctime / 1000));checkInt64(Math.floor(ctime / 1000));
+        HEAPU32[(((buf)+(80))>>2)] = (ctime % 1000) * 1000 * 1000;checkInt32((ctime % 1000) * 1000 * 1000);
+        HEAP64[(((buf)+(88))>>3)] = BigInt(stat.ino);checkInt64(stat.ino);
         return 0;
       },
   writeStatFs(buf, stats) {
-        HEAP32[(((buf)+(4))>>2)] = stats.bsize;
-        HEAP32[(((buf)+(40))>>2)] = stats.bsize;
-        HEAP32[(((buf)+(8))>>2)] = stats.blocks;
-        HEAP32[(((buf)+(12))>>2)] = stats.bfree;
-        HEAP32[(((buf)+(16))>>2)] = stats.bavail;
-        HEAP32[(((buf)+(20))>>2)] = stats.files;
-        HEAP32[(((buf)+(24))>>2)] = stats.ffree;
-        HEAP32[(((buf)+(28))>>2)] = stats.fsid;
-        HEAP32[(((buf)+(44))>>2)] = stats.flags;  // ST_NOSUID
-        HEAP32[(((buf)+(36))>>2)] = stats.namelen;
+        HEAP32[(((buf)+(4))>>2)] = stats.bsize;checkInt32(stats.bsize);
+        HEAP32[(((buf)+(40))>>2)] = stats.bsize;checkInt32(stats.bsize);
+        HEAP32[(((buf)+(8))>>2)] = stats.blocks;checkInt32(stats.blocks);
+        HEAP32[(((buf)+(12))>>2)] = stats.bfree;checkInt32(stats.bfree);
+        HEAP32[(((buf)+(16))>>2)] = stats.bavail;checkInt32(stats.bavail);
+        HEAP32[(((buf)+(20))>>2)] = stats.files;checkInt32(stats.files);
+        HEAP32[(((buf)+(24))>>2)] = stats.ffree;checkInt32(stats.ffree);
+        HEAP32[(((buf)+(28))>>2)] = stats.fsid;checkInt32(stats.fsid);
+        HEAP32[(((buf)+(44))>>2)] = stats.flags;checkInt32(stats.flags);  // ST_NOSUID
+        HEAP32[(((buf)+(36))>>2)] = stats.namelen;checkInt32(stats.namelen);
       },
   doMsync(addr, stream, len, flags, offset) {
         if (!FS.isFile(stream.node.mode)) {
@@ -3948,7 +3991,7 @@ async function createWasm() {
           var arg = syscallGetVarargP();
           var offset = 0;
           // We're always unlocked.
-          HEAP16[(((arg)+(offset))>>1)] = 2;
+          HEAP16[(((arg)+(offset))>>1)] = 2;checkInt16(2);
           return 0;
         }
         case 13:
@@ -4002,12 +4045,12 @@ async function createWasm() {
           if (stream.tty.ops.ioctl_tcgets) {
             var termios = stream.tty.ops.ioctl_tcgets(stream);
             var argp = syscallGetVarargP();
-            HEAP32[((argp)>>2)] = termios.c_iflag || 0;
-            HEAP32[(((argp)+(4))>>2)] = termios.c_oflag || 0;
-            HEAP32[(((argp)+(8))>>2)] = termios.c_cflag || 0;
-            HEAP32[(((argp)+(12))>>2)] = termios.c_lflag || 0;
+            HEAP32[((argp)>>2)] = termios.c_iflag || 0;checkInt32(termios.c_iflag || 0);
+            HEAP32[(((argp)+(4))>>2)] = termios.c_oflag || 0;checkInt32(termios.c_oflag || 0);
+            HEAP32[(((argp)+(8))>>2)] = termios.c_cflag || 0;checkInt32(termios.c_cflag || 0);
+            HEAP32[(((argp)+(12))>>2)] = termios.c_lflag || 0;checkInt32(termios.c_lflag || 0);
             for (var i = 0; i < 32; i++) {
-              HEAP8[(argp + i)+(17)] = termios.c_cc[i] || 0;
+              HEAP8[(argp + i)+(17)] = termios.c_cc[i] || 0;checkInt8(termios.c_cc[i] || 0);
             }
             return 0;
           }
@@ -4040,7 +4083,7 @@ async function createWasm() {
         case 21519: {
           if (!stream.tty) return -59;
           var argp = syscallGetVarargP();
-          HEAP32[((argp)>>2)] = 0;
+          HEAP32[((argp)>>2)] = 0;checkInt32(0);
           return 0;
         }
         case 21520: {
@@ -4058,8 +4101,8 @@ async function createWasm() {
           if (stream.tty.ops.ioctl_tiocgwinsz) {
             var winsize = stream.tty.ops.ioctl_tiocgwinsz(stream.tty);
             var argp = syscallGetVarargP();
-            HEAP16[((argp)>>1)] = winsize[0];
-            HEAP16[(((argp)+(2))>>1)] = winsize[1];
+            HEAP16[((argp)>>1)] = winsize[0];checkInt16(winsize[0]);
+            HEAP16[(((argp)+(2))>>1)] = winsize[1];checkInt16(winsize[1]);
           }
           return 0;
         }
@@ -4130,7 +4173,7 @@ async function createWasm() {
       }
       // "now" is in ms, and wasi times are in ns.
       var nsec = Math.round(now * 1000 * 1000);
-      HEAP64[((ptime)>>3)] = BigInt(nsec);
+      HEAP64[((ptime)>>3)] = BigInt(nsec);checkInt64(nsec);
       return 0;
     ;
   }
@@ -4350,17 +4393,17 @@ async function createWasm() {
       }
       for (var i = 0; i < e.buttons.length; ++i) {
         if (typeof e.buttons[i] == 'object') {
-          HEAP8[(eventStruct+i)+(1040)] = e.buttons[i].pressed;
+          HEAP8[(eventStruct+i)+(1040)] = e.buttons[i].pressed;checkInt8(e.buttons[i].pressed);
         } else {
           // Assigning a boolean to HEAP32, that's ok, but Closure would like to warn about it:
           /** @suppress {checkTypes} */
-          HEAP8[(eventStruct+i)+(1040)] = e.buttons[i] == 1;
+          HEAP8[(eventStruct+i)+(1040)] = e.buttons[i] == 1;checkInt8(e.buttons[i] == 1);
         }
       }
-      HEAP8[(eventStruct)+(1104)] = e.connected;
-      HEAP32[(((eventStruct)+(1108))>>2)] = e.index;
-      HEAP32[(((eventStruct)+(8))>>2)] = e.axes.length;
-      HEAP32[(((eventStruct)+(12))>>2)] = e.buttons.length;
+      HEAP8[(eventStruct)+(1104)] = e.connected;checkInt8(e.connected);
+      HEAP32[(((eventStruct)+(1108))>>2)] = e.index;checkInt32(e.index);
+      HEAP32[(((eventStruct)+(8))>>2)] = e.axes.length;checkInt32(e.axes.length);
+      HEAP32[(((eventStruct)+(12))>>2)] = e.buttons.length;checkInt32(e.buttons.length);
       stringToUTF8(e.id, eventStruct + 1112, 64);
       stringToUTF8(e.mapping, eventStruct + 1176, 64);
     };
@@ -4547,7 +4590,7 @@ async function createWasm() {
           } else {
             GL.recordError(0x502 /* GL_INVALID_OPERATION */);
           }
-          HEAP32[(((buffers)+(i*4))>>2)] = id;
+          HEAP32[(((buffers)+(i*4))>>2)] = id;checkInt32(id);
         }
       },
   getSource:(shader, count, string, length) => {
@@ -5429,13 +5472,13 @@ async function createWasm() {
         var query = GLctx.disjointTimerQueryExt['createQueryEXT']();
         if (!query) {
           GL.recordError(0x502 /* GL_INVALID_OPERATION */);
-          while (i < n) HEAP32[(((ids)+(i++*4))>>2)] = 0;
+          while (i < n) HEAP32[(((ids)+(i++*4))>>2)] = 0;checkInt32(0);
           return;
         }
         var id = GL.getNewId(GL.queries);
         query.name = id;
         GL.queries[id] = query;
-        HEAP32[(((ids)+(i*4))>>2)] = id;
+        HEAP32[(((ids)+(i*4))>>2)] = id;checkInt32(id);
       }
     };
   var _emscripten_glGenQueriesEXT = _glGenQueriesEXT;
@@ -5491,9 +5534,9 @@ async function createWasm() {
       if (info) {
         // If an error occurs, nothing will be written to length, size and type and name.
         var numBytesWrittenExclNull = name && stringToUTF8(info.name, name, bufSize);
-        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
-        if (size) HEAP32[((size)>>2)] = info.size;
-        if (type) HEAP32[((type)>>2)] = info.type;
+        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
+        if (size) HEAP32[((size)>>2)] = info.size;checkInt32(info.size);
+        if (type) HEAP32[((type)>>2)] = info.type;checkInt32(info.type);
       }
     };
   
@@ -5516,9 +5559,9 @@ async function createWasm() {
       if (!result) return; // If an error occurs, nothing will be written to uniformBlockName or length.
       if (uniformBlockName && bufSize > 0) {
         var numBytesWrittenExclNull = stringToUTF8(result, uniformBlockName, bufSize);
-        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
+        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
       } else {
-        if (length) HEAP32[((length)>>2)] = 0;
+        if (length) HEAP32[((length)>>2)] = 0;checkInt32(0);
       }
     };
   var _emscripten_glGetActiveUniformBlockName = _glGetActiveUniformBlockName;
@@ -5535,7 +5578,7 @@ async function createWasm() {
   
       if (pname == 0x8A41 /* GL_UNIFORM_BLOCK_NAME_LENGTH */) {
         var name = GLctx.getActiveUniformBlockName(program, uniformBlockIndex);
-        HEAP32[((params)>>2)] = name.length+1;
+        HEAP32[((params)>>2)] = name.length+1;checkInt32(name.length+1);
         return;
       }
   
@@ -5543,10 +5586,10 @@ async function createWasm() {
       if (result === null) return; // If an error occurs, nothing should be written to params.
       if (pname == 0x8A43 /*GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES*/) {
         for (var i = 0; i < result.length; i++) {
-          HEAP32[(((params)+(i*4))>>2)] = result[i];
+          HEAP32[(((params)+(i*4))>>2)] = result[i];checkInt32(result[i]);
         }
       } else {
-        HEAP32[((params)>>2)] = result;
+        HEAP32[((params)>>2)] = result;checkInt32(result);
       }
     };
   var _emscripten_glGetActiveUniformBlockiv = _glGetActiveUniformBlockiv;
@@ -5574,7 +5617,7 @@ async function createWasm() {
   
       var len = result.length;
       for (var i = 0; i < len; i++) {
-        HEAP32[(((params)+(i*4))>>2)] = result[i];
+        HEAP32[(((params)+(i*4))>>2)] = result[i];checkInt32(result[i]);
       }
     };
   var _emscripten_glGetActiveUniformsiv = _glGetActiveUniformsiv;
@@ -5586,10 +5629,10 @@ async function createWasm() {
       if (len > maxCount) {
         len = maxCount;
       }
-      HEAP32[((count)>>2)] = len;
+      HEAP32[((count)>>2)] = len;checkInt32(len);
       for (var i = 0; i < len; ++i) {
         var id = GL.shaders.indexOf(result[i]);
-        HEAP32[(((shaders)+(i*4))>>2)] = id;
+        HEAP32[(((shaders)+(i*4))>>2)] = id;checkInt32(id);
       }
     };
   var _emscripten_glGetAttachedShaders = _glGetAttachedShaders;
@@ -5608,9 +5651,9 @@ async function createWasm() {
       return HEAPU32[((ptr)>>2)] + HEAPU32[(((ptr)+(4))>>2)] * 4294967296;
     };
   var writeI53ToI64 = (ptr, num) => {
-      HEAPU32[((ptr)>>2)] = num;
+      HEAPU32[((ptr)>>2)] = num;checkInt32(num);
       var lower = HEAPU32[((ptr)>>2)];
-      HEAPU32[(((ptr)+(4))>>2)] = (num - lower)/4294967296;
+      HEAPU32[(((ptr)+(4))>>2)] = (num - lower)/4294967296;checkInt32((num - lower)/4294967296);
       var deserialized = (num >= 0) ? readI53FromU64(ptr) : readI53FromI64(ptr);
       var offset = ((ptr)>>2);
       if (deserialized != num) warnOnce(`writeI53ToI64() out of range: serialized JS Number ${num} to Wasm heap as bytes lo=${ptrToString(HEAPU32[offset])}, hi=${ptrToString(HEAPU32[offset+1])}, which deserializes back to ${deserialized} instead!`);
@@ -5727,9 +5770,9 @@ async function createWasm() {
                        result instanceof Array) {
               for (var i = 0; i < result.length; ++i) {
                 switch (type) {
-                  case 0: HEAP32[(((p)+(i*4))>>2)] = result[i]; break;
+                  case 0: HEAP32[(((p)+(i*4))>>2)] = result[i];checkInt32(result[i]); break;
                   case 2: HEAPF32[(((p)+(i*4))>>2)] = result[i]; break;
-                  case 4: HEAP8[(p)+(i)] = result[i] ? 1 : 0; break;
+                  case 4: HEAP8[(p)+(i)] = result[i] ? 1 : 0;checkInt8(result[i] ? 1 : 0); break;
                 }
               }
               return;
@@ -5752,9 +5795,9 @@ async function createWasm() {
   
       switch (type) {
         case 1: writeI53ToI64(p, ret); break;
-        case 0: HEAP32[((p)>>2)] = ret; break;
+        case 0: HEAP32[((p)>>2)] = ret;checkInt32(ret); break;
         case 2:   HEAPF32[((p)>>2)] = ret; break;
-        case 4: HEAP8[p] = ret ? 1 : 0; break;
+        case 4: HEAP8[p] = ret ? 1 : 0;checkInt8(ret ? 1 : 0); break;
       }
     };
   
@@ -5783,7 +5826,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((data)>>2)] = GLctx.getBufferParameter(target, value);
+      HEAP32[((data)>>2)] = GLctx.getBufferParameter(target, value);checkInt32(GLctx.getBufferParameter(target, value));
     };
   var _emscripten_glGetBufferParameteriv = _glGetBufferParameteriv;
 
@@ -5813,7 +5856,7 @@ async function createWasm() {
           result instanceof WebGLTexture) {
         result = result.name | 0;
       }
-      HEAP32[((params)>>2)] = result;
+      HEAP32[((params)>>2)] = result;checkInt32(result);
     };
   var _emscripten_glGetFramebufferAttachmentParameteriv = _glGetFramebufferAttachmentParameteriv;
 
@@ -5859,9 +5902,9 @@ async function createWasm() {
   
       switch (type) {
         case 1: writeI53ToI64(data, ret); break;
-        case 0: HEAP32[((data)>>2)] = ret; break;
+        case 0: HEAP32[((data)>>2)] = ret;checkInt32(ret); break;
         case 2: HEAPF32[((data)>>2)] = ret; break;
-        case 4: HEAP8[data] = ret ? 1 : 0; break;
+        case 4: HEAP8[data] = ret ? 1 : 0;checkInt8(ret ? 1 : 0); break;
         default: throw 'internal emscriptenWebGLGetIndexed() error, bad type: ' + type;
       }
     };
@@ -5901,7 +5944,7 @@ async function createWasm() {
       var ret = GLctx.getInternalformatParameter(target, internalformat, pname);
       if (ret === null) return;
       for (var i = 0; i < ret.length && i < bufSize; ++i) {
-        HEAP32[(((params)+(i*4))>>2)] = ret[i];
+        HEAP32[(((params)+(i*4))>>2)] = ret[i];checkInt32(ret[i]);
       }
     };
   var _emscripten_glGetInternalformativ = _glGetInternalformativ;
@@ -5917,7 +5960,7 @@ async function createWasm() {
       var log = GLctx.getProgramInfoLog(GL.programs[program]);
       if (log === null) log = '(unknown error)';
       var numBytesWrittenExclNull = (maxLength > 0 && infoLog) ? stringToUTF8(log, infoLog, maxLength) : 0;
-      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
+      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
     };
   var _emscripten_glGetProgramInfoLog = _glGetProgramInfoLog;
 
@@ -5941,7 +5984,7 @@ async function createWasm() {
       if (pname == 0x8B84) { // GL_INFO_LOG_LENGTH
         var log = GLctx.getProgramInfoLog(program);
         if (log === null) log = '(unknown error)';
-        HEAP32[((p)>>2)] = log.length + 1;
+        HEAP32[((p)>>2)] = log.length + 1;checkInt32(log.length + 1);
       } else if (pname == 0x8B87 /* GL_ACTIVE_UNIFORM_MAX_LENGTH */) {
         if (!program.maxUniformLength) {
           var numActiveUniforms = GLctx.getProgramParameter(program, 0x8B86/*GL_ACTIVE_UNIFORMS*/);
@@ -5949,7 +5992,7 @@ async function createWasm() {
             program.maxUniformLength = Math.max(program.maxUniformLength, GLctx.getActiveUniform(program, i).name.length+1);
           }
         }
-        HEAP32[((p)>>2)] = program.maxUniformLength;
+        HEAP32[((p)>>2)] = program.maxUniformLength;checkInt32(program.maxUniformLength);
       } else if (pname == 0x8B8A /* GL_ACTIVE_ATTRIBUTE_MAX_LENGTH */) {
         if (!program.maxAttributeLength) {
           var numActiveAttributes = GLctx.getProgramParameter(program, 0x8B89/*GL_ACTIVE_ATTRIBUTES*/);
@@ -5957,7 +6000,7 @@ async function createWasm() {
             program.maxAttributeLength = Math.max(program.maxAttributeLength, GLctx.getActiveAttrib(program, i).name.length+1);
           }
         }
-        HEAP32[((p)>>2)] = program.maxAttributeLength;
+        HEAP32[((p)>>2)] = program.maxAttributeLength;checkInt32(program.maxAttributeLength);
       } else if (pname == 0x8A35 /* GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH */) {
         if (!program.maxUniformBlockNameLength) {
           var numActiveUniformBlocks = GLctx.getProgramParameter(program, 0x8A36/*GL_ACTIVE_UNIFORM_BLOCKS*/);
@@ -5965,9 +6008,9 @@ async function createWasm() {
             program.maxUniformBlockNameLength = Math.max(program.maxUniformBlockNameLength, GLctx.getActiveUniformBlockName(program, i).length+1);
           }
         }
-        HEAP32[((p)>>2)] = program.maxUniformBlockNameLength;
+        HEAP32[((p)>>2)] = program.maxUniformBlockNameLength;checkInt32(program.maxUniformBlockNameLength);
       } else {
-        HEAP32[((p)>>2)] = GLctx.getProgramParameter(program, pname);
+        HEAP32[((p)>>2)] = GLctx.getProgramParameter(program, pname);checkInt32(GLctx.getProgramParameter(program, pname));
       }
     };
   var _emscripten_glGetProgramiv = _glGetProgramiv;
@@ -6016,7 +6059,7 @@ async function createWasm() {
       } else {
         ret = param;
       }
-      HEAP32[((params)>>2)] = ret;
+      HEAP32[((params)>>2)] = ret;checkInt32(ret);
     };
   var _emscripten_glGetQueryObjectivEXT = _glGetQueryObjectivEXT;
 
@@ -6041,7 +6084,7 @@ async function createWasm() {
       } else {
         ret = param;
       }
-      HEAP32[((params)>>2)] = ret;
+      HEAP32[((params)>>2)] = ret;checkInt32(ret);
     };
   var _emscripten_glGetQueryObjectuiv = _glGetQueryObjectuiv;
 
@@ -6058,7 +6101,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((params)>>2)] = GLctx.getQuery(target, pname);
+      HEAP32[((params)>>2)] = GLctx.getQuery(target, pname);checkInt32(GLctx.getQuery(target, pname));
     };
   var _emscripten_glGetQueryiv = _glGetQueryiv;
 
@@ -6070,7 +6113,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((params)>>2)] = GLctx.disjointTimerQueryExt['getQueryEXT'](target, pname);
+      HEAP32[((params)>>2)] = GLctx.disjointTimerQueryExt['getQueryEXT'](target, pname);checkInt32(GLctx.disjointTimerQueryExt['getQueryEXT'](target, pname));
     };
   var _emscripten_glGetQueryivEXT = _glGetQueryivEXT;
 
@@ -6082,7 +6125,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((params)>>2)] = GLctx.getRenderbufferParameter(target, pname);
+      HEAP32[((params)>>2)] = GLctx.getRenderbufferParameter(target, pname);checkInt32(GLctx.getRenderbufferParameter(target, pname));
     };
   var _emscripten_glGetRenderbufferParameteriv = _glGetRenderbufferParameteriv;
 
@@ -6106,7 +6149,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((params)>>2)] = GLctx.getSamplerParameter(GL.samplers[sampler], pname);
+      HEAP32[((params)>>2)] = GLctx.getSamplerParameter(GL.samplers[sampler], pname);checkInt32(GLctx.getSamplerParameter(GL.samplers[sampler], pname));
     };
   var _emscripten_glGetSamplerParameteriv = _glGetSamplerParameteriv;
 
@@ -6116,16 +6159,16 @@ async function createWasm() {
       var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
       if (log === null) log = '(unknown error)';
       var numBytesWrittenExclNull = (maxLength > 0 && infoLog) ? stringToUTF8(log, infoLog, maxLength) : 0;
-      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
+      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
     };
   var _emscripten_glGetShaderInfoLog = _glGetShaderInfoLog;
 
   /** @suppress {duplicate } */
   var _glGetShaderPrecisionFormat = (shaderType, precisionType, range, precision) => {
       var result = GLctx.getShaderPrecisionFormat(shaderType, precisionType);
-      HEAP32[((range)>>2)] = result.rangeMin;
-      HEAP32[(((range)+(4))>>2)] = result.rangeMax;
-      HEAP32[((precision)>>2)] = result.precision;
+      HEAP32[((range)>>2)] = result.rangeMin;checkInt32(result.rangeMin);
+      HEAP32[(((range)+(4))>>2)] = result.rangeMax;checkInt32(result.rangeMax);
+      HEAP32[((precision)>>2)] = result.precision;checkInt32(result.precision);
     };
   var _emscripten_glGetShaderPrecisionFormat = _glGetShaderPrecisionFormat;
 
@@ -6134,7 +6177,7 @@ async function createWasm() {
       var result = GLctx.getShaderSource(GL.shaders[shader]);
       if (!result) return; // If an error occurs, nothing will be written to length or source.
       var numBytesWrittenExclNull = (bufSize > 0 && source) ? stringToUTF8(result, source, bufSize) : 0;
-      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
+      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
     };
   var _emscripten_glGetShaderSource = _glGetShaderSource;
 
@@ -6155,15 +6198,15 @@ async function createWasm() {
         // (An empty string is falsey, so we can just check that instead of
         // looking at log.length.)
         var logLength = log ? log.length + 1 : 0;
-        HEAP32[((p)>>2)] = logLength;
+        HEAP32[((p)>>2)] = logLength;checkInt32(logLength);
       } else if (pname == 0x8B88) { // GL_SHADER_SOURCE_LENGTH
         var source = GLctx.getShaderSource(GL.shaders[shader]);
         // source may be a null, or the empty string, both of which are falsey
         // values that we report a 0 length for.
         var sourceLength = source ? source.length + 1 : 0;
-        HEAP32[((p)>>2)] = sourceLength;
+        HEAP32[((p)>>2)] = sourceLength;checkInt32(sourceLength);
       } else {
-        HEAP32[((p)>>2)] = GLctx.getShaderParameter(GL.shaders[shader], pname);
+        HEAP32[((p)>>2)] = GLctx.getShaderParameter(GL.shaders[shader], pname);checkInt32(GLctx.getShaderParameter(GL.shaders[shader], pname));
       }
     };
   var _emscripten_glGetShaderiv = _glGetShaderiv;
@@ -6272,8 +6315,8 @@ async function createWasm() {
       }
       var ret = GLctx.getSyncParameter(GL.syncs[sync], pname);
       if (ret !== null) {
-        HEAP32[((values)>>2)] = ret;
-        if (length) HEAP32[((length)>>2)] = 1; // Report a single value outputted.
+        HEAP32[((values)>>2)] = ret;checkInt32(ret);
+        if (length) HEAP32[((length)>>2)] = 1;checkInt32(1); // Report a single value outputted.
       }
     };
   var _emscripten_glGetSynciv = _glGetSynciv;
@@ -6300,7 +6343,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((params)>>2)] = GLctx.getTexParameter(target, pname);
+      HEAP32[((params)>>2)] = GLctx.getTexParameter(target, pname);checkInt32(GLctx.getTexParameter(target, pname));
     };
   var _emscripten_glGetTexParameteriv = _glGetTexParameteriv;
 
@@ -6312,13 +6355,13 @@ async function createWasm() {
   
       if (name && bufSize > 0) {
         var numBytesWrittenExclNull = stringToUTF8(info.name, name, bufSize);
-        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
+        if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;checkInt32(numBytesWrittenExclNull);
       } else {
-        if (length) HEAP32[((length)>>2)] = 0;
+        if (length) HEAP32[((length)>>2)] = 0;checkInt32(0);
       }
   
-      if (size) HEAP32[((size)>>2)] = info.size;
-      if (type) HEAP32[((type)>>2)] = info.type;
+      if (size) HEAP32[((size)>>2)] = info.size;checkInt32(info.size);
+      if (type) HEAP32[((type)>>2)] = info.type;checkInt32(info.type);
     };
   var _emscripten_glGetTransformFeedbackVarying = _glGetTransformFeedbackVarying;
 
@@ -6350,7 +6393,7 @@ async function createWasm() {
   
       var len = result.length;
       for (var i = 0; i < len; i++) {
-        HEAP32[(((uniformIndices)+(i*4))>>2)] = result[i];
+        HEAP32[(((uniformIndices)+(i*4))>>2)] = result[i];checkInt32(result[i]);
       }
     };
   var _emscripten_glGetUniformIndices = _glGetUniformIndices;
@@ -6489,13 +6532,13 @@ async function createWasm() {
       var data = GLctx.getUniform(program, webglGetUniformLocation(location));
       if (typeof data == 'number' || typeof data == 'boolean') {
         switch (type) {
-          case 0: HEAP32[((params)>>2)] = data; break;
+          case 0: HEAP32[((params)>>2)] = data;checkInt32(data); break;
           case 2: HEAPF32[((params)>>2)] = data; break;
         }
       } else {
         for (var i = 0; i < data.length; i++) {
           switch (type) {
-            case 0: HEAP32[(((params)+(i*4))>>2)] = data[i]; break;
+            case 0: HEAP32[(((params)+(i*4))>>2)] = data[i];checkInt32(data[i]); break;
             case 2: HEAPF32[(((params)+(i*4))>>2)] = data[i]; break;
           }
         }
@@ -6531,19 +6574,19 @@ async function createWasm() {
       }
       var data = GLctx.getVertexAttrib(index, pname);
       if (pname == 0x889F/*VERTEX_ATTRIB_ARRAY_BUFFER_BINDING*/) {
-        HEAP32[((params)>>2)] = data && data["name"];
+        HEAP32[((params)>>2)] = data && data["name"];checkInt32(data && data["name"]);
       } else if (typeof data == 'number' || typeof data == 'boolean') {
         switch (type) {
-          case 0: HEAP32[((params)>>2)] = data; break;
+          case 0: HEAP32[((params)>>2)] = data;checkInt32(data); break;
           case 2: HEAPF32[((params)>>2)] = data; break;
-          case 5: HEAP32[((params)>>2)] = Math.fround(data); break;
+          case 5: HEAP32[((params)>>2)] = Math.fround(data);checkInt32(Math.fround(data)); break;
         }
       } else {
         for (var i = 0; i < data.length; i++) {
           switch (type) {
-            case 0: HEAP32[(((params)+(i*4))>>2)] = data[i]; break;
+            case 0: HEAP32[(((params)+(i*4))>>2)] = data[i];checkInt32(data[i]); break;
             case 2: HEAPF32[(((params)+(i*4))>>2)] = data[i]; break;
-            case 5: HEAP32[(((params)+(i*4))>>2)] = Math.fround(data[i]); break;
+            case 5: HEAP32[(((params)+(i*4))>>2)] = Math.fround(data[i]);checkInt32(Math.fround(data[i])); break;
           }
         }
       }
@@ -6570,7 +6613,7 @@ async function createWasm() {
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      HEAP32[((pointer)>>2)] = GLctx.getVertexAttribOffset(index, pname);
+      HEAP32[((pointer)>>2)] = GLctx.getVertexAttribOffset(index, pname);checkInt32(GLctx.getVertexAttribOffset(index, pname));
     };
   var _emscripten_glGetVertexAttribPointerv = _glGetVertexAttribPointerv;
 
@@ -7806,8 +7849,8 @@ async function createWasm() {
       var isFullscreen = !!fullscreenElement;
       // Assigning a boolean to HEAP32 with expected type coercion.
       /** @suppress{checkTypes} */
-      HEAP8[eventStruct] = isFullscreen;
-      HEAP8[(eventStruct)+(1)] = JSEvents.fullscreenEnabled();
+      HEAP8[eventStruct] = isFullscreen;checkInt8(isFullscreen);
+      HEAP8[(eventStruct)+(1)] = JSEvents.fullscreenEnabled();checkInt8(JSEvents.fullscreenEnabled());
       // If transitioning to fullscreen, report info about the element that is now fullscreen.
       // If transitioning to windowed mode, report info about the element that just was fullscreen.
       var reportedElement = isFullscreen ? fullscreenElement : JSEvents.previousFullscreenElement;
@@ -7815,10 +7858,10 @@ async function createWasm() {
       var id = reportedElement?.id || '';
       stringToUTF8(nodeName, eventStruct + 2, 128);
       stringToUTF8(id, eventStruct + 130, 128);
-      HEAP32[(((eventStruct)+(260))>>2)] = reportedElement ? reportedElement.clientWidth : 0;
-      HEAP32[(((eventStruct)+(264))>>2)] = reportedElement ? reportedElement.clientHeight : 0;
-      HEAP32[(((eventStruct)+(268))>>2)] = screen.width;
-      HEAP32[(((eventStruct)+(272))>>2)] = screen.height;
+      HEAP32[(((eventStruct)+(260))>>2)] = reportedElement ? reportedElement.clientWidth : 0;checkInt32(reportedElement ? reportedElement.clientWidth : 0);
+      HEAP32[(((eventStruct)+(264))>>2)] = reportedElement ? reportedElement.clientHeight : 0;checkInt32(reportedElement ? reportedElement.clientHeight : 0);
+      HEAP32[(((eventStruct)+(268))>>2)] = screen.width;checkInt32(screen.width);
+      HEAP32[(((eventStruct)+(272))>>2)] = screen.height;checkInt32(screen.height);
       if (isFullscreen) {
         JSEvents.previousFullscreenElement = fullscreenElement;
       }
@@ -7892,6 +7935,323 @@ async function createWasm() {
       return registerGamepadEventCallback(2, userData, useCapture, callbackfunc, 27, "gamepaddisconnected", targetThread);
     };
 
+  
+  var handleException = (e) => {
+      // Certain exception types we do not treat as errors since they are used for
+      // internal control flow.
+      // 1. ExitStatus, which is thrown by exit()
+      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
+      //    that wish to return to JS event loop.
+      if (e instanceof ExitStatus || e == 'unwind') {
+        return EXITSTATUS;
+      }
+      checkStackCookie();
+      if (e instanceof WebAssembly.RuntimeError) {
+        if (_emscripten_stack_get_current() <= 0) {
+          err('Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to 65536)');
+        }
+      }
+      quit_(1, e);
+    };
+  
+  
+  var runtimeKeepaliveCounter = 0;
+  var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
+  var _proc_exit = (code) => {
+      EXITSTATUS = code;
+      if (!keepRuntimeAlive()) {
+        Module['onExit']?.(code);
+        ABORT = true;
+      }
+      quit_(code, new ExitStatus(code));
+    };
+  
+  
+  /** @suppress {duplicate } */
+  /** @param {boolean|number=} implicit */
+  var exitJS = (status, implicit) => {
+      EXITSTATUS = status;
+  
+      checkUnflushedContent();
+  
+      // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
+      if (keepRuntimeAlive() && !implicit) {
+        var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
+        err(msg);
+      }
+  
+      _proc_exit(status);
+    };
+  var _exit = exitJS;
+  
+  
+  var maybeExit = () => {
+      if (!keepRuntimeAlive()) {
+        try {
+          _exit(EXITSTATUS);
+        } catch (e) {
+          handleException(e);
+        }
+      }
+    };
+  var callUserCallback = (func) => {
+      if (ABORT) {
+        err('user callback triggered after runtime exited or application aborted.  Ignoring.');
+        return;
+      }
+      try {
+        func();
+        maybeExit();
+      } catch (e) {
+        handleException(e);
+      }
+    };
+  
+  var _emscripten_set_main_loop_timing = (mode, value) => {
+      MainLoop.timingMode = mode;
+      MainLoop.timingValue = value;
+  
+      if (!MainLoop.func) {
+        err('emscripten_set_main_loop_timing: Cannot set timing mode for main loop since a main loop does not exist! Call emscripten_set_main_loop first to set one up.');
+        return 1; // Return non-zero on failure, can't set timing mode when there is no main loop.
+      }
+  
+      if (!MainLoop.running) {
+        
+        MainLoop.running = true;
+      }
+      if (mode == 0) {
+        MainLoop.scheduler = function MainLoop_scheduler_setTimeout() {
+          var timeUntilNextTick = Math.max(0, MainLoop.tickStartTime + value - _emscripten_get_now())|0;
+          setTimeout(MainLoop.runner, timeUntilNextTick); // doing this each time means that on exception, we stop
+        };
+        MainLoop.method = 'timeout';
+      } else if (mode == 1) {
+        MainLoop.scheduler = function MainLoop_scheduler_rAF() {
+          MainLoop.requestAnimationFrame(MainLoop.runner);
+        };
+        MainLoop.method = 'rAF';
+      } else if (mode == 2) {
+        if (typeof MainLoop.setImmediate == 'undefined') {
+          if (typeof setImmediate == 'undefined') {
+            // Emulate setImmediate. (note: not a complete polyfill, we don't emulate clearImmediate() to keep code size to minimum, since not needed)
+            var setImmediates = [];
+            var emscriptenMainLoopMessageId = 'setimmediate';
+            /** @param {Event} event */
+            var MainLoop_setImmediate_messageHandler = (event) => {
+              // When called in current thread or Worker, the main loop ID is structured slightly different to accommodate for --proxy-to-worker runtime listening to Worker events,
+              // so check for both cases.
+              if (event.data === emscriptenMainLoopMessageId || event.data.target === emscriptenMainLoopMessageId) {
+                event.stopPropagation();
+                setImmediates.shift()();
+              }
+            };
+            addEventListener("message", MainLoop_setImmediate_messageHandler, true);
+            MainLoop.setImmediate = /** @type{function(function(): ?, ...?): number} */((func) => {
+              setImmediates.push(func);
+              if (ENVIRONMENT_IS_WORKER) {
+                Module['setImmediates'] ??= [];
+                Module['setImmediates'].push(func);
+                postMessage({target: emscriptenMainLoopMessageId}); // In --proxy-to-worker, route the message via proxyClient.js
+              } else postMessage(emscriptenMainLoopMessageId, "*"); // On the main thread, can just send the message to itself.
+            });
+          } else {
+            MainLoop.setImmediate = setImmediate;
+          }
+        }
+        MainLoop.scheduler = function MainLoop_scheduler_setImmediate() {
+          MainLoop.setImmediate(MainLoop.runner);
+        };
+        MainLoop.method = 'immediate';
+      }
+      return 0;
+    };
+  var MainLoop = {
+  running:false,
+  scheduler:null,
+  method:"",
+  currentlyRunningMainloop:0,
+  func:null,
+  arg:0,
+  timingMode:0,
+  timingValue:0,
+  currentFrameNumber:0,
+  queue:[],
+  preMainLoop:[],
+  postMainLoop:[],
+  pause() {
+        MainLoop.scheduler = null;
+        // Incrementing this signals the previous main loop that it's now become old, and it must return.
+        MainLoop.currentlyRunningMainloop++;
+      },
+  resume() {
+        MainLoop.currentlyRunningMainloop++;
+        var timingMode = MainLoop.timingMode;
+        var timingValue = MainLoop.timingValue;
+        var func = MainLoop.func;
+        MainLoop.func = null;
+        // do not set timing and call scheduler, we will do it on the next lines
+        setMainLoop(func, 0, false, MainLoop.arg, true);
+        _emscripten_set_main_loop_timing(timingMode, timingValue);
+        MainLoop.scheduler();
+      },
+  updateStatus() {
+        if (Module['setStatus']) {
+          var message = Module['statusMessage'] || 'Please wait...';
+          var remaining = MainLoop.remainingBlockers ?? 0;
+          var expected = MainLoop.expectedBlockers ?? 0;
+          if (remaining) {
+            if (remaining < expected) {
+              Module['setStatus'](`{message} ({expected - remaining}/{expected})`);
+            } else {
+              Module['setStatus'](message);
+            }
+          } else {
+            Module['setStatus']('');
+          }
+        }
+      },
+  init() {
+        Module['preMainLoop'] && MainLoop.preMainLoop.push(Module['preMainLoop']);
+        Module['postMainLoop'] && MainLoop.postMainLoop.push(Module['postMainLoop']);
+      },
+  runIter(func) {
+        if (ABORT) return;
+        for (var pre of MainLoop.preMainLoop) {
+          if (pre() === false) {
+            return; // |return false| skips a frame
+          }
+        }
+        callUserCallback(func);
+        for (var post of MainLoop.postMainLoop) {
+          post();
+        }
+        checkStackCookie();
+      },
+  nextRAF:0,
+  fakeRequestAnimationFrame(func) {
+        // try to keep 60fps between calls to here
+        var now = Date.now();
+        if (MainLoop.nextRAF === 0) {
+          MainLoop.nextRAF = now + 1000/60;
+        } else {
+          while (now + 2 >= MainLoop.nextRAF) { // fudge a little, to avoid timer jitter causing us to do lots of delay:0
+            MainLoop.nextRAF += 1000/60;
+          }
+        }
+        var delay = Math.max(MainLoop.nextRAF - now, 0);
+        setTimeout(func, delay);
+      },
+  requestAnimationFrame(func) {
+        if (typeof requestAnimationFrame == 'function') {
+          requestAnimationFrame(func);
+          return;
+        }
+        var RAF = MainLoop.fakeRequestAnimationFrame;
+        RAF(func);
+      },
+  };
+  
+  
+  
+  
+    /**
+     * @param {number=} arg
+     * @param {boolean=} noSetTiming
+     */
+  var setMainLoop = (iterFunc, fps, simulateInfiniteLoop, arg, noSetTiming) => {
+      assert(!MainLoop.func, 'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.');
+      MainLoop.func = iterFunc;
+      MainLoop.arg = arg;
+  
+      var thisMainLoopId = MainLoop.currentlyRunningMainloop;
+      function checkIsRunning() {
+        if (thisMainLoopId < MainLoop.currentlyRunningMainloop) {
+          
+          maybeExit();
+          return false;
+        }
+        return true;
+      }
+  
+      // We create the loop runner here but it is not actually running until
+      // _emscripten_set_main_loop_timing is called (which might happen a
+      // later time).  This member signifies that the current runner has not
+      // yet been started so that we can call runtimeKeepalivePush when it
+      // gets it timing set for the first time.
+      MainLoop.running = false;
+      MainLoop.runner = function MainLoop_runner() {
+        if (ABORT) return;
+        if (MainLoop.queue.length > 0) {
+          var start = Date.now();
+          var blocker = MainLoop.queue.shift();
+          blocker.func(blocker.arg);
+          if (MainLoop.remainingBlockers) {
+            var remaining = MainLoop.remainingBlockers;
+            var next = remaining%1 == 0 ? remaining-1 : Math.floor(remaining);
+            if (blocker.counted) {
+              MainLoop.remainingBlockers = next;
+            } else {
+              // not counted, but move the progress along a tiny bit
+              next = next + 0.5; // do not steal all the next one's progress
+              MainLoop.remainingBlockers = (8*remaining + next)/9;
+            }
+          }
+          MainLoop.updateStatus();
+  
+          // catches pause/resume main loop from blocker execution
+          if (!checkIsRunning()) return;
+  
+          setTimeout(MainLoop.runner, 0);
+          return;
+        }
+  
+        // catch pauses from non-main loop sources
+        if (!checkIsRunning()) return;
+  
+        // Implement very basic swap interval control
+        MainLoop.currentFrameNumber = MainLoop.currentFrameNumber + 1 | 0;
+        if (MainLoop.timingMode == 1 && MainLoop.timingValue > 1 && MainLoop.currentFrameNumber % MainLoop.timingValue != 0) {
+          // Not the scheduled time to render this frame - skip.
+          MainLoop.scheduler();
+          return;
+        } else if (MainLoop.timingMode == 0) {
+          MainLoop.tickStartTime = _emscripten_get_now();
+        }
+  
+        if (MainLoop.method === 'timeout' && Module['ctx']) {
+          warnOnce('Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!');
+          MainLoop.method = ''; // just warn once per call to set main loop
+        }
+  
+        MainLoop.runIter(iterFunc);
+  
+        // catch pauses from the main loop itself
+        if (!checkIsRunning()) return;
+  
+        MainLoop.scheduler();
+      }
+  
+      if (!noSetTiming) {
+        if (fps > 0) {
+          _emscripten_set_main_loop_timing(0, 1000.0 / fps);
+        } else {
+          // Do rAF by rendering each frame (no decimating)
+          _emscripten_set_main_loop_timing(1, 1);
+        }
+  
+        MainLoop.scheduler();
+      }
+  
+      if (simulateInfiniteLoop) {
+        throw 'unwind';
+      }
+    };
+  var _emscripten_set_main_loop = (func, fps, simulateInfiniteLoop) => {
+      var iterFunc = (() => dynCall_v(func));
+      setMainLoop(iterFunc, fps, simulateInfiniteLoop);
+    };
+
   var _emscripten_set_mousemove_callback_on_thread = (target, userData, useCapture, callbackfunc, targetThread) =>
       registerMouseEventCallback(target, userData, useCapture, callbackfunc, 8, "mousemove", targetThread);
 
@@ -7902,7 +8262,7 @@ async function createWasm() {
       var isPointerlocked = !!pointerLockElement;
       // Assigning a boolean to HEAP32 with expected type coercion.
       /** @suppress{checkTypes} */
-      HEAP8[eventStruct] = isPointerlocked;
+      HEAP8[eventStruct] = isPointerlocked;checkInt8(isPointerlocked);
       var nodeName = JSEvents.getNodeNameForTarget(pointerLockElement);
       var id = pointerLockElement?.id || '';
       stringToUTF8(nodeName, eventStruct + 1, 128);
@@ -7965,15 +8325,15 @@ async function createWasm() {
           return;
         }
         var uiEvent = JSEvents.uiEvent;
-        HEAP32[((uiEvent)>>2)] = 0; // always zero for resize and scroll
-        HEAP32[(((uiEvent)+(4))>>2)] = b.clientWidth;
-        HEAP32[(((uiEvent)+(8))>>2)] = b.clientHeight;
-        HEAP32[(((uiEvent)+(12))>>2)] = innerWidth;
-        HEAP32[(((uiEvent)+(16))>>2)] = innerHeight;
-        HEAP32[(((uiEvent)+(20))>>2)] = outerWidth;
-        HEAP32[(((uiEvent)+(24))>>2)] = outerHeight;
-        HEAP32[(((uiEvent)+(28))>>2)] = pageXOffset | 0; // scroll offsets are float
-        HEAP32[(((uiEvent)+(32))>>2)] = pageYOffset | 0;
+        HEAP32[((uiEvent)>>2)] = 0;checkInt32(0); // always zero for resize and scroll
+        HEAP32[(((uiEvent)+(4))>>2)] = b.clientWidth;checkInt32(b.clientWidth);
+        HEAP32[(((uiEvent)+(8))>>2)] = b.clientHeight;checkInt32(b.clientHeight);
+        HEAP32[(((uiEvent)+(12))>>2)] = innerWidth;checkInt32(innerWidth);
+        HEAP32[(((uiEvent)+(16))>>2)] = innerHeight;checkInt32(innerHeight);
+        HEAP32[(((uiEvent)+(20))>>2)] = outerWidth;checkInt32(outerWidth);
+        HEAP32[(((uiEvent)+(24))>>2)] = outerHeight;checkInt32(outerHeight);
+        HEAP32[(((uiEvent)+(28))>>2)] = pageXOffset | 0;checkInt32(pageXOffset | 0); // scroll offsets are float
+        HEAP32[(((uiEvent)+(32))>>2)] = pageYOffset | 0;checkInt32(pageYOffset | 0);
         if (((a1, a2, a3) => dynCall_iiii(callbackfunc, a1, a2, a3))(eventTypeId, uiEvent, userData)) e.preventDefault();
       };
   
@@ -8049,7 +8409,7 @@ async function createWasm() {
             break;
           }
         }
-        HEAP32[(((touchEvent)+(8))>>2)] = numTouches;
+        HEAP32[(((touchEvent)+(8))>>2)] = numTouches;checkInt32(numTouches);
   
         if (((a1, a2, a3) => dynCall_iiii(callbackfunc, a1, a2, a3))(eventTypeId, touchEvent, userData)) e.preventDefault();
       };
@@ -8083,8 +8443,8 @@ async function createWasm() {
   
       // Assigning a boolean to HEAP32 with expected type coercion.
       /** @suppress{checkTypes} */
-      HEAP8[eventStruct] = document.hidden;
-      HEAP32[(((eventStruct)+(4))>>2)] = visibilityState;
+      HEAP8[eventStruct] = document.hidden;checkInt8(document.hidden);
+      HEAP32[(((eventStruct)+(4))>>2)] = visibilityState;checkInt32(visibilityState);
     };
   
   var registerVisibilityChangeEventCallback = (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
@@ -8115,76 +8475,6 @@ async function createWasm() {
       return registerVisibilityChangeEventCallback(specialHTMLTargets[1], userData, useCapture, callbackfunc, 21, "visibilitychange", targetThread);
     };
 
-  var handleException = (e) => {
-      // Certain exception types we do not treat as errors since they are used for
-      // internal control flow.
-      // 1. ExitStatus, which is thrown by exit()
-      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
-      //    that wish to return to JS event loop.
-      if (e instanceof ExitStatus || e == 'unwind') {
-        return EXITSTATUS;
-      }
-      checkStackCookie();
-      if (e instanceof WebAssembly.RuntimeError) {
-        if (_emscripten_stack_get_current() <= 0) {
-          err('Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to 65536)');
-        }
-      }
-      quit_(1, e);
-    };
-  
-  
-  var runtimeKeepaliveCounter = 0;
-  var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
-  var _proc_exit = (code) => {
-      EXITSTATUS = code;
-      if (!keepRuntimeAlive()) {
-        Module['onExit']?.(code);
-        ABORT = true;
-      }
-      quit_(code, new ExitStatus(code));
-    };
-  
-  
-  /** @suppress {duplicate } */
-  /** @param {boolean|number=} implicit */
-  var exitJS = (status, implicit) => {
-      EXITSTATUS = status;
-  
-      checkUnflushedContent();
-  
-      // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
-      if (keepRuntimeAlive() && !implicit) {
-        var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
-        err(msg);
-      }
-  
-      _proc_exit(status);
-    };
-  var _exit = exitJS;
-  
-  
-  var maybeExit = () => {
-      if (!keepRuntimeAlive()) {
-        try {
-          _exit(EXITSTATUS);
-        } catch (e) {
-          handleException(e);
-        }
-      }
-    };
-  var callUserCallback = (func) => {
-      if (ABORT) {
-        err('user callback triggered after runtime exited or application aborted.  Ignoring.');
-        return;
-      }
-      try {
-        func();
-        maybeExit();
-      } catch (e) {
-        handleException(e);
-      }
-    };
   
   /** @param {number=} timeout */
   var safeSetTimeout = (func, timeout) => {
@@ -8645,7 +8935,7 @@ async function createWasm() {
         if (typeof SDL != "undefined") {
           var flags = HEAPU32[((SDL.screen)>>2)];
           flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
-          HEAP32[((SDL.screen)>>2)] = flags;
+          HEAP32[((SDL.screen)>>2)] = flags;checkInt32(flags);
         }
         Browser.updateCanvasDimensions(Browser.getCanvas());
         Browser.updateResizeListeners();
@@ -8655,7 +8945,7 @@ async function createWasm() {
         if (typeof SDL != "undefined") {
           var flags = HEAPU32[((SDL.screen)>>2)];
           flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
-          HEAP32[((SDL.screen)>>2)] = flags;
+          HEAP32[((SDL.screen)>>2)] = flags;checkInt32(flags);
         }
         Browser.updateCanvasDimensions(Browser.getCanvas());
         Browser.updateResizeListeners();
@@ -8709,15 +8999,6 @@ async function createWasm() {
   
   var _emscripten_set_window_title = (title) => document.title = UTF8ToString(title);
 
-  var _emscripten_sleep = (ms) => {
-      // emscripten_sleep() does not return a value, but we still need a |return|
-      // here for stack switching support (ASYNCIFY=2). In that mode this function
-      // returns a Promise instead of nothing, and that Promise is what tells the
-      // wasm VM to pause the stack.
-      return Asyncify.handleSleep((wakeUp) => safeSetTimeout(wakeUp, ms));
-    };
-  _emscripten_sleep.isAsync = true;
-
 
   function _fd_close(fd) {
   try {
@@ -8754,7 +9035,7 @@ async function createWasm() {
   
       var stream = SYSCALLS.getStreamFromFD(fd);
       var num = doReadv(stream, iov, iovcnt);
-      HEAPU32[((pnum)>>2)] = num;
+      HEAPU32[((pnum)>>2)] = num;checkInt32(num);
       return 0;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -8772,7 +9053,7 @@ async function createWasm() {
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.llseek(stream, offset, whence);
-      HEAP64[((newOffset)>>3)] = BigInt(stream.position);
+      HEAP64[((newOffset)>>3)] = BigInt(stream.position);checkInt64(stream.position);
       if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null; // reset readdir state
       return 0;
     } catch (e) {
@@ -8808,17 +9089,13 @@ async function createWasm() {
   
       var stream = SYSCALLS.getStreamFromFD(fd);
       var num = doWritev(stream, iov, iovcnt);
-      HEAPU32[((pnum)>>2)] = num;
+      HEAPU32[((pnum)>>2)] = num;checkInt32(num);
       return 0;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
     return e.errno;
   }
   }
-
-
-
-
 
 
 
@@ -8931,248 +9208,6 @@ async function createWasm() {
   
   
   
-  
-  var _emscripten_set_main_loop_timing = (mode, value) => {
-      MainLoop.timingMode = mode;
-      MainLoop.timingValue = value;
-  
-      if (!MainLoop.func) {
-        err('emscripten_set_main_loop_timing: Cannot set timing mode for main loop since a main loop does not exist! Call emscripten_set_main_loop first to set one up.');
-        return 1; // Return non-zero on failure, can't set timing mode when there is no main loop.
-      }
-  
-      if (!MainLoop.running) {
-        
-        MainLoop.running = true;
-      }
-      if (mode == 0) {
-        MainLoop.scheduler = function MainLoop_scheduler_setTimeout() {
-          var timeUntilNextTick = Math.max(0, MainLoop.tickStartTime + value - _emscripten_get_now())|0;
-          setTimeout(MainLoop.runner, timeUntilNextTick); // doing this each time means that on exception, we stop
-        };
-        MainLoop.method = 'timeout';
-      } else if (mode == 1) {
-        MainLoop.scheduler = function MainLoop_scheduler_rAF() {
-          MainLoop.requestAnimationFrame(MainLoop.runner);
-        };
-        MainLoop.method = 'rAF';
-      } else if (mode == 2) {
-        if (typeof MainLoop.setImmediate == 'undefined') {
-          if (typeof setImmediate == 'undefined') {
-            // Emulate setImmediate. (note: not a complete polyfill, we don't emulate clearImmediate() to keep code size to minimum, since not needed)
-            var setImmediates = [];
-            var emscriptenMainLoopMessageId = 'setimmediate';
-            /** @param {Event} event */
-            var MainLoop_setImmediate_messageHandler = (event) => {
-              // When called in current thread or Worker, the main loop ID is structured slightly different to accommodate for --proxy-to-worker runtime listening to Worker events,
-              // so check for both cases.
-              if (event.data === emscriptenMainLoopMessageId || event.data.target === emscriptenMainLoopMessageId) {
-                event.stopPropagation();
-                setImmediates.shift()();
-              }
-            };
-            addEventListener("message", MainLoop_setImmediate_messageHandler, true);
-            MainLoop.setImmediate = /** @type{function(function(): ?, ...?): number} */((func) => {
-              setImmediates.push(func);
-              if (ENVIRONMENT_IS_WORKER) {
-                Module['setImmediates'] ??= [];
-                Module['setImmediates'].push(func);
-                postMessage({target: emscriptenMainLoopMessageId}); // In --proxy-to-worker, route the message via proxyClient.js
-              } else postMessage(emscriptenMainLoopMessageId, "*"); // On the main thread, can just send the message to itself.
-            });
-          } else {
-            MainLoop.setImmediate = setImmediate;
-          }
-        }
-        MainLoop.scheduler = function MainLoop_scheduler_setImmediate() {
-          MainLoop.setImmediate(MainLoop.runner);
-        };
-        MainLoop.method = 'immediate';
-      }
-      return 0;
-    };
-  
-  
-  
-    /**
-     * @param {number=} arg
-     * @param {boolean=} noSetTiming
-     */
-  var setMainLoop = (iterFunc, fps, simulateInfiniteLoop, arg, noSetTiming) => {
-      assert(!MainLoop.func, 'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.');
-      MainLoop.func = iterFunc;
-      MainLoop.arg = arg;
-  
-      var thisMainLoopId = MainLoop.currentlyRunningMainloop;
-      function checkIsRunning() {
-        if (thisMainLoopId < MainLoop.currentlyRunningMainloop) {
-          
-          maybeExit();
-          return false;
-        }
-        return true;
-      }
-  
-      // We create the loop runner here but it is not actually running until
-      // _emscripten_set_main_loop_timing is called (which might happen a
-      // later time).  This member signifies that the current runner has not
-      // yet been started so that we can call runtimeKeepalivePush when it
-      // gets it timing set for the first time.
-      MainLoop.running = false;
-      MainLoop.runner = function MainLoop_runner() {
-        if (ABORT) return;
-        if (MainLoop.queue.length > 0) {
-          var start = Date.now();
-          var blocker = MainLoop.queue.shift();
-          blocker.func(blocker.arg);
-          if (MainLoop.remainingBlockers) {
-            var remaining = MainLoop.remainingBlockers;
-            var next = remaining%1 == 0 ? remaining-1 : Math.floor(remaining);
-            if (blocker.counted) {
-              MainLoop.remainingBlockers = next;
-            } else {
-              // not counted, but move the progress along a tiny bit
-              next = next + 0.5; // do not steal all the next one's progress
-              MainLoop.remainingBlockers = (8*remaining + next)/9;
-            }
-          }
-          MainLoop.updateStatus();
-  
-          // catches pause/resume main loop from blocker execution
-          if (!checkIsRunning()) return;
-  
-          setTimeout(MainLoop.runner, 0);
-          return;
-        }
-  
-        // catch pauses from non-main loop sources
-        if (!checkIsRunning()) return;
-  
-        // Implement very basic swap interval control
-        MainLoop.currentFrameNumber = MainLoop.currentFrameNumber + 1 | 0;
-        if (MainLoop.timingMode == 1 && MainLoop.timingValue > 1 && MainLoop.currentFrameNumber % MainLoop.timingValue != 0) {
-          // Not the scheduled time to render this frame - skip.
-          MainLoop.scheduler();
-          return;
-        } else if (MainLoop.timingMode == 0) {
-          MainLoop.tickStartTime = _emscripten_get_now();
-        }
-  
-        if (MainLoop.method === 'timeout' && Module['ctx']) {
-          warnOnce('Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!');
-          MainLoop.method = ''; // just warn once per call to set main loop
-        }
-  
-        MainLoop.runIter(iterFunc);
-  
-        // catch pauses from the main loop itself
-        if (!checkIsRunning()) return;
-  
-        MainLoop.scheduler();
-      }
-  
-      if (!noSetTiming) {
-        if (fps > 0) {
-          _emscripten_set_main_loop_timing(0, 1000.0 / fps);
-        } else {
-          // Do rAF by rendering each frame (no decimating)
-          _emscripten_set_main_loop_timing(1, 1);
-        }
-  
-        MainLoop.scheduler();
-      }
-  
-      if (simulateInfiniteLoop) {
-        throw 'unwind';
-      }
-    };
-  
-  
-  var MainLoop = {
-  running:false,
-  scheduler:null,
-  method:"",
-  currentlyRunningMainloop:0,
-  func:null,
-  arg:0,
-  timingMode:0,
-  timingValue:0,
-  currentFrameNumber:0,
-  queue:[],
-  preMainLoop:[],
-  postMainLoop:[],
-  pause() {
-        MainLoop.scheduler = null;
-        // Incrementing this signals the previous main loop that it's now become old, and it must return.
-        MainLoop.currentlyRunningMainloop++;
-      },
-  resume() {
-        MainLoop.currentlyRunningMainloop++;
-        var timingMode = MainLoop.timingMode;
-        var timingValue = MainLoop.timingValue;
-        var func = MainLoop.func;
-        MainLoop.func = null;
-        // do not set timing and call scheduler, we will do it on the next lines
-        setMainLoop(func, 0, false, MainLoop.arg, true);
-        _emscripten_set_main_loop_timing(timingMode, timingValue);
-        MainLoop.scheduler();
-      },
-  updateStatus() {
-        if (Module['setStatus']) {
-          var message = Module['statusMessage'] || 'Please wait...';
-          var remaining = MainLoop.remainingBlockers ?? 0;
-          var expected = MainLoop.expectedBlockers ?? 0;
-          if (remaining) {
-            if (remaining < expected) {
-              Module['setStatus'](`{message} ({expected - remaining}/{expected})`);
-            } else {
-              Module['setStatus'](message);
-            }
-          } else {
-            Module['setStatus']('');
-          }
-        }
-      },
-  init() {
-        Module['preMainLoop'] && MainLoop.preMainLoop.push(Module['preMainLoop']);
-        Module['postMainLoop'] && MainLoop.postMainLoop.push(Module['postMainLoop']);
-      },
-  runIter(func) {
-        if (ABORT) return;
-        for (var pre of MainLoop.preMainLoop) {
-          if (pre() === false) {
-            return; // |return false| skips a frame
-          }
-        }
-        callUserCallback(func);
-        for (var post of MainLoop.postMainLoop) {
-          post();
-        }
-        checkStackCookie();
-      },
-  nextRAF:0,
-  fakeRequestAnimationFrame(func) {
-        // try to keep 60fps between calls to here
-        var now = Date.now();
-        if (MainLoop.nextRAF === 0) {
-          MainLoop.nextRAF = now + 1000/60;
-        } else {
-          while (now + 2 >= MainLoop.nextRAF) { // fudge a little, to avoid timer jitter causing us to do lots of delay:0
-            MainLoop.nextRAF += 1000/60;
-          }
-        }
-        var delay = Math.max(MainLoop.nextRAF - now, 0);
-        setTimeout(func, delay);
-      },
-  requestAnimationFrame(func) {
-        if (typeof requestAnimationFrame == 'function') {
-          requestAnimationFrame(func);
-          return;
-        }
-        var RAF = MainLoop.fakeRequestAnimationFrame;
-        RAF(func);
-      },
-  };
   
   
   
@@ -9689,7 +9724,7 @@ async function createWasm() {
               var data = GLFW.joys[joy];
   
               for (var i = 0; i < gamepad.buttons.length;  ++i) {
-                HEAP8[data.buttons + i] = gamepad.buttons[i].pressed;
+                HEAP8[data.buttons + i] = gamepad.buttons[i].pressed;checkInt8(gamepad.buttons[i].pressed);
               }
   
               for (var i = 0; i < gamepad.axes.length; ++i) {
@@ -9795,7 +9830,7 @@ async function createWasm() {
   
           var filename = stringToNewUTF8(path);
           filenamesArray.push(filename);
-          HEAPU32[(((filenames)+(i*4))>>2)] = filename;
+          HEAPU32[(((filenames)+(i*4))>>2)] = filename;checkInt32(filename);
         }
   
         for (var i = 0; i < count; ++i) {
@@ -9907,8 +9942,8 @@ async function createWasm() {
         HEAPF64[((y)>>3)] = Browser.mouseY;
       },
   getMousePos:(winid, x, y) => {
-        HEAP32[((x)>>2)] = Browser.mouseX;
-        HEAP32[((y)>>2)] = Browser.mouseY;
+        HEAP32[((x)>>2)] = Browser.mouseX;checkInt32(Browser.mouseX);
+        HEAP32[((y)>>2)] = Browser.mouseY;checkInt32(Browser.mouseY);
       },
   setCursorPos:(winid, x, y) => {
       },
@@ -9923,11 +9958,11 @@ async function createWasm() {
         }
   
         if (x) {
-          HEAP32[((x)>>2)] = wx;
+          HEAP32[((x)>>2)] = wx;checkInt32(wx);
         }
   
         if (y) {
-          HEAP32[((y)>>2)] = wy;
+          HEAP32[((y)>>2)] = wy;checkInt32(wy);
         }
       },
   setWindowPos:(winid, x, y) => {
@@ -9947,11 +9982,11 @@ async function createWasm() {
         }
   
         if (width) {
-          HEAP32[((width)>>2)] = ww;
+          HEAP32[((width)>>2)] = ww;checkInt32(ww);
         }
   
         if (height) {
-          HEAP32[((height)>>2)] = wh;
+          HEAP32[((height)>>2)] = wh;checkInt32(wh);
         }
       },
   setWindowSize:(winid, width, height) => {
@@ -10249,14 +10284,12 @@ async function createWasm() {
 
   var _glfwDefaultWindowHints = () => GLFW.defaultWindowHints();
 
-  var _glfwDestroyWindow = (winid) => GLFW.destroyWindow(winid);
-
   var _glfwGetPrimaryMonitor = () => 1;
 
   var _glfwGetTime = () => GLFW.getTime() - GLFW.initialTime;
 
   var _glfwGetVideoModes = (monitor, count) => {
-      HEAP32[((count)>>2)] = 0;
+      HEAP32[((count)>>2)] = 0;checkInt32(0);
       return 0;
     };
 
@@ -10324,6 +10357,8 @@ async function createWasm() {
       return prevcbfun;
     };
 
+  var _glfwSetCursorPos = (winid, x, y) => GLFW.setCursorPos(winid, x, y);
+
   var _glfwSetCursorPosCallback = (winid, cbfun) => GLFW.setCursorPosCallback(winid, cbfun);
 
   var _glfwSetDropCallback = (winid, cbfun) => GLFW.setDropCallback(winid, cbfun);
@@ -10369,6 +10404,8 @@ async function createWasm() {
       if (!win) return;
       win.shouldClose = value;
     };
+
+  var _glfwSetWindowSize = (winid, width, height) => GLFW.setWindowSize(winid, width, height);
 
   var _glfwSetWindowSizeCallback = (winid, cbfun) => GLFW.setWindowSizeCallback(winid, cbfun);
 
@@ -10580,7 +10617,7 @@ async function createWasm() {
   setDataRewindFunc(ptr) {
         var bottomOfCallStack = Asyncify.exportCallStack[0];
         var rewindId = Asyncify.getCallStackId(bottomOfCallStack);
-        HEAP32[(((ptr)+(8))>>2)] = rewindId;
+        HEAP32[(((ptr)+(8))>>2)] = rewindId;checkInt32(rewindId);
       },
   getDataRewindFuncName(ptr) {
         var id = HEAP32[(((ptr)+(8))>>2)];
@@ -10847,6 +10884,11 @@ var miniTempWebGLIntBuffersStorage = new Int32Array(288);
     miniTempWebGLIntBuffers[i] = miniTempWebGLIntBuffersStorage.subarray(0, i);
   };
 
+      Module['requestAnimationFrame'] = MainLoop.requestAnimationFrame;
+      Module['pauseMainLoop'] = MainLoop.pause;
+      Module['resumeMainLoop'] = MainLoop.resume;
+      MainLoop.init();;
+
       // exports
       Module['requestFullscreen'] = Browser.requestFullscreen;
       Module['requestFullScreen'] = Browser.requestFullScreen;
@@ -10854,60 +10896,65 @@ var miniTempWebGLIntBuffersStorage = new Int32Array(288);
       Module['getUserMedia'] = Browser.getUserMedia;
       Module['createContext'] = Browser.createContext;
     ;
-
-      Module['requestAnimationFrame'] = MainLoop.requestAnimationFrame;
-      Module['pauseMainLoop'] = MainLoop.pause;
-      Module['resumeMainLoop'] = MainLoop.resume;
-      MainLoop.init();;
 // End JS library code
 
 function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  48712: () => { if (document.fullscreenElement) return 1; },  
- 48758: () => { return Module.canvas.width; },  
- 48790: () => { return parseInt(Module.canvas.style.width); },  
- 48838: () => { document.exitFullscreen(); },  
- 48865: () => { setTimeout(function() { Module.requestFullscreen(false, false); }, 100); },  
- 48938: () => { if (document.fullscreenElement) return 1; },  
- 48984: () => { return Module.canvas.width; },  
- 49016: () => { return screen.width; },  
- 49041: () => { document.exitFullscreen(); },  
- 49068: () => { setTimeout(function() { Module.requestFullscreen(false, true); setTimeout(function() { canvas.style.width="unset"; }, 100); }, 100); },  
- 49201: () => { return window.innerWidth; },  
- 49227: () => { return window.innerHeight; },  
- 49254: () => { if (document.fullscreenElement) return 1; },  
- 49300: () => { return Module.canvas.width; },  
- 49332: () => { return parseInt(Module.canvas.style.width); },  
- 49380: () => { if (document.fullscreenElement) return 1; },  
- 49426: () => { return Module.canvas.width; },  
- 49458: () => { return screen.width; },  
- 49483: () => { return window.innerWidth; },  
- 49509: () => { return window.innerHeight; },  
- 49536: () => { if (document.fullscreenElement) return 1; },  
- 49582: () => { return Module.canvas.width; },  
- 49614: () => { return screen.width; },  
- 49639: () => { document.exitFullscreen(); },  
- 49666: () => { if (document.fullscreenElement) return 1; },  
- 49712: () => { return Module.canvas.width; },  
- 49744: () => { return parseInt(Module.canvas.style.width); },  
- 49792: () => { document.exitFullscreen(); },  
- 49819: ($0) => { Module.canvas.style.opacity = $0; },  
- 49857: () => { return screen.width; },  
- 49882: () => { return screen.height; },  
- 49908: () => { return window.screenX; },  
- 49935: () => { return window.screenY; },  
- 49962: () => { return window.devicePixelRatio; },  
- 49998: ($0) => { navigator.clipboard.writeText(UTF8ToString($0)); },  
- 50051: ($0) => { Module.canvas.style.cursor = UTF8ToString($0); },  
- 50102: () => { Module.canvas.style.cursor = 'none'; },  
- 50139: ($0, $1, $2, $3) => { try { navigator.getGamepads()[$0].vibrationActuator.playEffect('dual-rumble', { startDelay: 0, duration: $3, weakMagnitude: $1, strongMagnitude: $2 }); } catch (e) { try { navigator.getGamepads()[$0].hapticActuators[0].pulse($2, $3); } catch (e) { } } },  
- 50395: ($0) => { Module.canvas.style.cursor = UTF8ToString($0); },  
- 50446: () => { if (document.fullscreenElement) return 1; },  
- 50492: () => { return window.innerWidth; },  
- 50518: () => { return window.innerHeight; },  
- 50545: () => { if (document.pointerLockElement) return 1; }
+  75056: () => { if (document.fullscreenElement) return 1; },  
+ 75102: () => { return Module.canvas.width; },  
+ 75134: () => { return parseInt(Module.canvas.style.width); },  
+ 75182: () => { document.exitFullscreen(); },  
+ 75209: () => { setTimeout(function() { Module.requestFullscreen(false, false); }, 100); },  
+ 75282: () => { if (document.fullscreenElement) return 1; },  
+ 75328: () => { return Module.canvas.width; },  
+ 75360: () => { return screen.width; },  
+ 75385: () => { document.exitFullscreen(); },  
+ 75412: () => { setTimeout(function() { Module.requestFullscreen(false, true); setTimeout(function() { canvas.style.width="unset"; }, 100); }, 100); },  
+ 75545: () => { return window.innerWidth; },  
+ 75571: () => { return window.innerHeight; },  
+ 75598: () => { if (document.fullscreenElement) return 1; },  
+ 75644: () => { return Module.canvas.width; },  
+ 75676: () => { return parseInt(Module.canvas.style.width); },  
+ 75724: () => { if (document.fullscreenElement) return 1; },  
+ 75770: () => { return Module.canvas.width; },  
+ 75802: () => { return screen.width; },  
+ 75827: () => { return window.innerWidth; },  
+ 75853: () => { return window.innerHeight; },  
+ 75880: () => { if (document.fullscreenElement) return 1; },  
+ 75926: () => { return Module.canvas.width; },  
+ 75958: () => { return screen.width; },  
+ 75983: () => { document.exitFullscreen(); },  
+ 76010: () => { if (document.fullscreenElement) return 1; },  
+ 76056: () => { return Module.canvas.width; },  
+ 76088: () => { return parseInt(Module.canvas.style.width); },  
+ 76136: () => { document.exitFullscreen(); },  
+ 76163: ($0) => { Module.canvas.style.opacity = $0; },  
+ 76201: () => { return screen.width; },  
+ 76226: () => { return screen.height; },  
+ 76252: () => { return window.screenX; },  
+ 76279: () => { return window.screenY; },  
+ 76306: () => { return window.devicePixelRatio; },  
+ 76342: ($0) => { navigator.clipboard.writeText(UTF8ToString($0)); },  
+ 76395: ($0) => { Module.canvas.style.cursor = UTF8ToString($0); },  
+ 76446: () => { Module.canvas.style.cursor = 'none'; },  
+ 76483: ($0, $1, $2, $3) => { try { navigator.getGamepads()[$0].vibrationActuator.playEffect('dual-rumble', { startDelay: 0, duration: $3, weakMagnitude: $1, strongMagnitude: $2 }); } catch (e) { try { navigator.getGamepads()[$0].hapticActuators[0].pulse($2, $3); } catch (e) { } } },  
+ 76739: ($0) => { Module.canvas.style.cursor = UTF8ToString($0); },  
+ 76790: () => { if (document.fullscreenElement) return 1; },  
+ 76836: () => { return window.innerWidth; },  
+ 76862: () => { return window.innerHeight; },  
+ 76889: () => { if (document.pointerLockElement) return 1; },  
+ 76936: ($0, $1, $2, $3, $4) => { if (typeof window === 'undefined' || (window.AudioContext || window.webkitAudioContext) === undefined) { return 0; } if (typeof(window.miniaudio) === 'undefined') { window.miniaudio = { referenceCount: 0 }; window.miniaudio.device_type = {}; window.miniaudio.device_type.playback = $0; window.miniaudio.device_type.capture = $1; window.miniaudio.device_type.duplex = $2; window.miniaudio.device_state = {}; window.miniaudio.device_state.stopped = $3; window.miniaudio.device_state.started = $4; miniaudio.devices = []; miniaudio.track_device = function(device) { for (var iDevice = 0; iDevice < miniaudio.devices.length; ++iDevice) { if (miniaudio.devices[iDevice] == null) { miniaudio.devices[iDevice] = device; return iDevice; } } miniaudio.devices.push(device); return miniaudio.devices.length - 1; }; miniaudio.untrack_device_by_index = function(deviceIndex) { miniaudio.devices[deviceIndex] = null; while (miniaudio.devices.length > 0) { if (miniaudio.devices[miniaudio.devices.length-1] == null) { miniaudio.devices.pop(); } else { break; } } }; miniaudio.untrack_device = function(device) { for (var iDevice = 0; iDevice < miniaudio.devices.length; ++iDevice) { if (miniaudio.devices[iDevice] == device) { return miniaudio.untrack_device_by_index(iDevice); } } }; miniaudio.get_device_by_index = function(deviceIndex) { return miniaudio.devices[deviceIndex]; }; miniaudio.unlock_event_types = (function(){ return ['touchend', 'click']; })(); miniaudio.unlock = function() { for(var i = 0; i < miniaudio.devices.length; ++i) { var device = miniaudio.devices[i]; if (device != null && device.webaudio != null && device.state === window.miniaudio.device_state.started) { device.webaudio.resume().then(() => { Module._ma_device__on_notification_unlocked(device.pDevice); }, (error) => {console.error("Failed to resume audiocontext", error); }); } } miniaudio.unlock_event_types.map(function(event_type) { document.removeEventListener(event_type, miniaudio.unlock, true); }); }; miniaudio.unlock_event_types.map(function(event_type) { document.addEventListener(event_type, miniaudio.unlock, true); }); } window.miniaudio.referenceCount += 1; return 1; },  
+ 79094: () => { if (typeof(window.miniaudio) !== 'undefined') { window.miniaudio.referenceCount -= 1; if (window.miniaudio.referenceCount === 0) { delete window.miniaudio; } } },  
+ 79258: () => { return (navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined); },  
+ 79362: () => { try { var temp = new (window.AudioContext || window.webkitAudioContext)(); var sampleRate = temp.sampleRate; temp.close(); return sampleRate; } catch(e) { return 0; } },  
+ 79533: ($0, $1, $2, $3, $4, $5) => { var deviceType = $0; var channels = $1; var sampleRate = $2; var bufferSize = $3; var pIntermediaryBuffer = $4; var pDevice = $5; if (typeof(window.miniaudio) === 'undefined') { return -1; } var device = {}; var audioContextOptions = {}; if (deviceType == window.miniaudio.device_type.playback && sampleRate != 0) { audioContextOptions.sampleRate = sampleRate; } device.webaudio = new (window.AudioContext || window.webkitAudioContext)(audioContextOptions); device.webaudio.suspend(); device.state = window.miniaudio.device_state.stopped; var channelCountIn = 0; var channelCountOut = channels; if (deviceType != window.miniaudio.device_type.playback) { channelCountIn = channels; } device.scriptNode = device.webaudio.createScriptProcessor(bufferSize, channelCountIn, channelCountOut); device.scriptNode.onaudioprocess = function(e) { if (device.intermediaryBufferView == null || device.intermediaryBufferView.length == 0) { device.intermediaryBufferView = new Float32Array(Module.HEAPF32.buffer, pIntermediaryBuffer, bufferSize * channels); } if (deviceType == miniaudio.device_type.capture || deviceType == miniaudio.device_type.duplex) { for (var iChannel = 0; iChannel < channels; iChannel += 1) { var inputBuffer = e.inputBuffer.getChannelData(iChannel); var intermediaryBuffer = device.intermediaryBufferView; for (var iFrame = 0; iFrame < bufferSize; iFrame += 1) { intermediaryBuffer[iFrame*channels + iChannel] = inputBuffer[iFrame]; } } _ma_device_process_pcm_frames_capture__webaudio(pDevice, bufferSize, pIntermediaryBuffer); } if (deviceType == miniaudio.device_type.playback || deviceType == miniaudio.device_type.duplex) { _ma_device_process_pcm_frames_playback__webaudio(pDevice, bufferSize, pIntermediaryBuffer); for (var iChannel = 0; iChannel < e.outputBuffer.numberOfChannels; ++iChannel) { var outputBuffer = e.outputBuffer.getChannelData(iChannel); var intermediaryBuffer = device.intermediaryBufferView; for (var iFrame = 0; iFrame < bufferSize; iFrame += 1) { outputBuffer[iFrame] = intermediaryBuffer[iFrame*channels + iChannel]; } } } else { for (var iChannel = 0; iChannel < e.outputBuffer.numberOfChannels; ++iChannel) { e.outputBuffer.getChannelData(iChannel).fill(0.0); } } }; if (deviceType == miniaudio.device_type.capture || deviceType == miniaudio.device_type.duplex) { navigator.mediaDevices.getUserMedia({audio:true, video:false}) .then(function(stream) { device.streamNode = device.webaudio.createMediaStreamSource(stream); device.streamNode.connect(device.scriptNode); device.scriptNode.connect(device.webaudio.destination); }) .catch(function(error) { console.log("Failed to get user media: " + error); }); } if (deviceType == miniaudio.device_type.playback) { device.scriptNode.connect(device.webaudio.destination); } device.pDevice = pDevice; return miniaudio.track_device(device); },  
+ 82361: ($0) => { return miniaudio.get_device_by_index($0).webaudio.sampleRate; },  
+ 82427: ($0) => { var device = miniaudio.get_device_by_index($0); if (device.scriptNode !== undefined) { device.scriptNode.onaudioprocess = function(e) {}; device.scriptNode.disconnect(); device.scriptNode = undefined; } if (device.streamNode !== undefined) { device.streamNode.disconnect(); device.streamNode = undefined; } device.webaudio.close(); device.webaudio = undefined; device.pDevice = undefined; },  
+ 82820: ($0) => { miniaudio.untrack_device_by_index($0); },  
+ 82863: ($0) => { var device = miniaudio.get_device_by_index($0); device.webaudio.resume(); device.state = miniaudio.device_state.started; },  
+ 82988: ($0) => { var device = miniaudio.get_device_by_index($0); device.webaudio.suspend(); device.state = miniaudio.device_state.stopped; }
 };
 function GetCanvasIdJs() { var canvasId = "#" + Module.canvas.id; var lengthBytes = lengthBytesUTF8(canvasId) + 1; var stringOnWasmHeap = _malloc(lengthBytes); stringToUTF8(canvasId, stringOnWasmHeap, lengthBytes); return stringOnWasmHeap; }
 var wasmImports = {
@@ -10915,6 +10962,8 @@ var wasmImports = {
   GetCanvasIdJs,
   /** @export */
   __assert_fail: ___assert_fail,
+  /** @export */
+  __handle_stack_overflow: ___handle_stack_overflow,
   /** @export */
   __syscall_chdir: ___syscall_chdir,
   /** @export */
@@ -11512,6 +11561,8 @@ var wasmImports = {
   /** @export */
   emscripten_set_gamepaddisconnected_callback_on_thread: _emscripten_set_gamepaddisconnected_callback_on_thread,
   /** @export */
+  emscripten_set_main_loop: _emscripten_set_main_loop,
+  /** @export */
   emscripten_set_mousemove_callback_on_thread: _emscripten_set_mousemove_callback_on_thread,
   /** @export */
   emscripten_set_pointerlockchange_callback_on_thread: _emscripten_set_pointerlockchange_callback_on_thread,
@@ -11529,8 +11580,6 @@ var wasmImports = {
   emscripten_set_visibilitychange_callback_on_thread: _emscripten_set_visibilitychange_callback_on_thread,
   /** @export */
   emscripten_set_window_title: _emscripten_set_window_title,
-  /** @export */
-  emscripten_sleep: _emscripten_sleep,
   /** @export */
   exit: _exit,
   /** @export */
@@ -11574,17 +11623,9 @@ var wasmImports = {
   /** @export */
   glCullFace: _glCullFace,
   /** @export */
-  glDeleteBuffers: _glDeleteBuffers,
-  /** @export */
   glDeleteProgram: _glDeleteProgram,
   /** @export */
-  glDeleteShader: _glDeleteShader,
-  /** @export */
-  glDeleteTextures: _glDeleteTextures,
-  /** @export */
   glDepthFunc: _glDepthFunc,
-  /** @export */
-  glDetachShader: _glDetachShader,
   /** @export */
   glDisable: _glDisable,
   /** @export */
@@ -11672,8 +11713,6 @@ var wasmImports = {
   /** @export */
   glfwDefaultWindowHints: _glfwDefaultWindowHints,
   /** @export */
-  glfwDestroyWindow: _glfwDestroyWindow,
-  /** @export */
   glfwGetPrimaryMonitor: _glfwGetPrimaryMonitor,
   /** @export */
   glfwGetTime: _glfwGetTime,
@@ -11687,6 +11726,8 @@ var wasmImports = {
   glfwSetCharCallback: _glfwSetCharCallback,
   /** @export */
   glfwSetCursorEnterCallback: _glfwSetCursorEnterCallback,
+  /** @export */
+  glfwSetCursorPos: _glfwSetCursorPos,
   /** @export */
   glfwSetCursorPosCallback: _glfwSetCursorPosCallback,
   /** @export */
@@ -11708,6 +11749,8 @@ var wasmImports = {
   /** @export */
   glfwSetWindowShouldClose: _glfwSetWindowShouldClose,
   /** @export */
+  glfwSetWindowSize: _glfwSetWindowSize,
+  /** @export */
   glfwSetWindowSizeCallback: _glfwSetWindowSizeCallback,
   /** @export */
   glfwSwapBuffers: _glfwSwapBuffers,
@@ -11724,6 +11767,11 @@ var _malloc = createExportWrapper('malloc', 1);
 var _free = createExportWrapper('free', 1);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
+var _ma_device__on_notification_unlocked = Module['_ma_device__on_notification_unlocked'] = createExportWrapper('ma_device__on_notification_unlocked', 1);
+var _ma_malloc_emscripten = Module['_ma_malloc_emscripten'] = createExportWrapper('ma_malloc_emscripten', 2);
+var _ma_free_emscripten = Module['_ma_free_emscripten'] = createExportWrapper('ma_free_emscripten', 2);
+var _ma_device_process_pcm_frames_capture__webaudio = Module['_ma_device_process_pcm_frames_capture__webaudio'] = createExportWrapper('ma_device_process_pcm_frames_capture__webaudio', 3);
+var _ma_device_process_pcm_frames_playback__webaudio = Module['_ma_device_process_pcm_frames_playback__webaudio'] = createExportWrapper('ma_device_process_pcm_frames_playback__webaudio', 3);
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
 var _emscripten_stack_get_free = () => (_emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'])();
 var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();
@@ -11731,8 +11779,9 @@ var _emscripten_stack_get_end = () => (_emscripten_stack_get_end = wasmExports['
 var __emscripten_stack_restore = (a0) => (__emscripten_stack_restore = wasmExports['_emscripten_stack_restore'])(a0);
 var __emscripten_stack_alloc = (a0) => (__emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'])(a0);
 var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
-var dynCall_vi = Module['dynCall_vi'] = createExportWrapper('dynCall_vi', 2);
-var dynCall_vif = Module['dynCall_vif'] = createExportWrapper('dynCall_vif', 3);
+var ___set_stack_limits = Module['___set_stack_limits'] = createExportWrapper('__set_stack_limits', 2);
+var dynCall_iiii = Module['dynCall_iiii'] = createExportWrapper('dynCall_iiii', 4);
+var dynCall_v = Module['dynCall_v'] = createExportWrapper('dynCall_v', 1);
 var dynCall_vii = Module['dynCall_vii'] = createExportWrapper('dynCall_vii', 3);
 var dynCall_viii = Module['dynCall_viii'] = createExportWrapper('dynCall_viii', 4);
 var dynCall_viff = Module['dynCall_viff'] = createExportWrapper('dynCall_viff', 4);
@@ -11740,27 +11789,30 @@ var dynCall_viiiii = Module['dynCall_viiiii'] = createExportWrapper('dynCall_vii
 var dynCall_viiii = Module['dynCall_viiii'] = createExportWrapper('dynCall_viiii', 5);
 var dynCall_vidd = Module['dynCall_vidd'] = createExportWrapper('dynCall_vidd', 4);
 var dynCall_ii = Module['dynCall_ii'] = createExportWrapper('dynCall_ii', 2);
-var dynCall_iiii = Module['dynCall_iiii'] = createExportWrapper('dynCall_iiii', 4);
 var dynCall_iiiiii = Module['dynCall_iiiiii'] = createExportWrapper('dynCall_iiiiii', 6);
 var dynCall_viiiiii = Module['dynCall_viiiiii'] = createExportWrapper('dynCall_viiiiii', 7);
 var dynCall_iii = Module['dynCall_iii'] = createExportWrapper('dynCall_iii', 3);
+var dynCall_vi = Module['dynCall_vi'] = createExportWrapper('dynCall_vi', 2);
+var dynCall_iiiii = Module['dynCall_iiiii'] = createExportWrapper('dynCall_iiiii', 5);
+var dynCall_iiiji = Module['dynCall_iiiji'] = createExportWrapper('dynCall_iiiji', 5);
+var dynCall_iiiiiii = Module['dynCall_iiiiiii'] = createExportWrapper('dynCall_iiiiiii', 7);
+var dynCall_jii = Module['dynCall_jii'] = createExportWrapper('dynCall_jii', 3);
 var dynCall_vffff = Module['dynCall_vffff'] = createExportWrapper('dynCall_vffff', 5);
 var dynCall_vf = Module['dynCall_vf'] = createExportWrapper('dynCall_vf', 2);
 var dynCall_viiiiiiii = Module['dynCall_viiiiiiii'] = createExportWrapper('dynCall_viiiiiiii', 9);
 var dynCall_viiiiiiiii = Module['dynCall_viiiiiiiii'] = createExportWrapper('dynCall_viiiiiiiii', 10);
 var dynCall_i = Module['dynCall_i'] = createExportWrapper('dynCall_i', 1);
 var dynCall_vff = Module['dynCall_vff'] = createExportWrapper('dynCall_vff', 3);
-var dynCall_v = Module['dynCall_v'] = createExportWrapper('dynCall_v', 1);
 var dynCall_viiiiiii = Module['dynCall_viiiiiii'] = createExportWrapper('dynCall_viiiiiii', 8);
 var dynCall_vfi = Module['dynCall_vfi'] = createExportWrapper('dynCall_vfi', 3);
 var dynCall_viif = Module['dynCall_viif'] = createExportWrapper('dynCall_viif', 4);
+var dynCall_vif = Module['dynCall_vif'] = createExportWrapper('dynCall_vif', 3);
 var dynCall_vifff = Module['dynCall_vifff'] = createExportWrapper('dynCall_vifff', 5);
 var dynCall_viffff = Module['dynCall_viffff'] = createExportWrapper('dynCall_viffff', 6);
 var dynCall_vfff = Module['dynCall_vfff'] = createExportWrapper('dynCall_vfff', 4);
 var dynCall_viiiiiiiiii = Module['dynCall_viiiiiiiiii'] = createExportWrapper('dynCall_viiiiiiiiii', 11);
 var dynCall_viiiiiiiiiii = Module['dynCall_viiiiiiiiiii'] = createExportWrapper('dynCall_viiiiiiiiiii', 12);
 var dynCall_viifi = Module['dynCall_viifi'] = createExportWrapper('dynCall_viifi', 5);
-var dynCall_iiiii = Module['dynCall_iiiii'] = createExportWrapper('dynCall_iiiii', 5);
 var dynCall_jiji = Module['dynCall_jiji'] = createExportWrapper('dynCall_jiji', 4);
 var dynCall_iidiiii = Module['dynCall_iidiiii'] = createExportWrapper('dynCall_iidiiii', 7);
 var _asyncify_start_unwind = createExportWrapper('asyncify_start_unwind', 1);
@@ -11928,6 +11980,7 @@ var unexportedSymbols = [
   'exitJS',
   'abortOnCannotGrowMemory',
   'ENV',
+  'setStackLimits',
   'ERRNO_CODES',
   'strError',
   'DNS',
@@ -12058,8 +12111,6 @@ var unexportedSymbols = [
   'runAndAbortIfError',
   'Asyncify',
   'Fibers',
-  'SDL',
-  'SDL_gfx',
   'GLFW_Window',
   'GLFW',
   'emscriptenWebGLGetIndexed',
