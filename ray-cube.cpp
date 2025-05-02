@@ -63,7 +63,7 @@ Cube cube;
 
 void Cube::init(Vector3 initPos, bool smoothBehaviour) {
 
-	model = LoadModel("ray-cube.gltf"); // model cube is size 2x2
+	model = LoadModel("assets/ray-cube.gltf"); // model cube is size 2x2
 	position = initPos; // it is moved 1.0f in y so it stays on the floor
 	transforms = MatrixIdentity();
 	// Matrix scale = MatrixScale(0.5, 0.5, 0.5);
@@ -258,7 +258,7 @@ bool cameraUpdateEnabled = false;
 void drawText() {
 	DrawFPS(10, 10);
 	
-	DrawText(TextFormat("F1 - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
+	DrawText(TextFormat("T - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
 			 10, 30, 20, BLUE);
 
 	DrawText(TextFormat("WASD & Arrows - control %s", cameraUpdateEnabled ? "camera" : "cube"),
@@ -323,7 +323,7 @@ int main(void)
 	{
 		float delta = GetFrameTime();
 
-		if (IsKeyPressed(KEY_F1)) {
+		if (IsKeyPressed(KEY_T)) {
 			cameraUpdateEnabled = !cameraUpdateEnabled;
 			if (cameraUpdateEnabled) {
 				SetMousePosition(screenWidth/2, screenHeight/2);

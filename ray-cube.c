@@ -267,7 +267,7 @@ bool cameraUpdateEnabled = false;
 void drawText(Cube *cube) {
 	DrawFPS(10, 10);
 	
-	DrawText(TextFormat("F1 - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
+	DrawText(TextFormat("T - toggle camera control: %s", cameraUpdateEnabled ? "ON" : "OFF"),
 			 10, 30, 20, BLUE);
 
 	DrawText(TextFormat("WASD & Arrows - control %s", cameraUpdateEnabled ? "camera" : "cube"),
@@ -332,7 +332,7 @@ int main(void)
 	{
 		float delta = GetFrameTime();
 
-		if (IsKeyPressed(KEY_F1)) {
+		if (IsKeyPressed(KEY_T)) {
 			cameraUpdateEnabled = !cameraUpdateEnabled;
 		}
 		
